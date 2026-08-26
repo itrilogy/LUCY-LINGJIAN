@@ -17,23 +17,25 @@ export function useVerseCycle(
   const [pose, setPose] = useState<Pose>(() => randomPose());
   const [layout, setLayout] = useState<"vertical" | "horizontal">(() => randomLayout());
   const [leaving, setLeaving] = useState(false);
+  const [cycle, setCycle] = useState(0);
 
   const expanded = useMemo(() => expandTags(playTags, soundMap), [playTags, soundMap]);
   const pool = useMemo(() => scorePool(quotes, expanded), [quotes, expanded]);
+  const poolRef = useRef(pool);
+  poolRef.current = pool;
 
-  const next = useCallback(() => {
-    const q = pickWeighted(pool, shown.current, lastId.current);
-    if (!q) {
-      setQuote(null);
-      return;
-    }
+  const pick = useCallback(() => {
+    const q = pickWeighted(poolRef.current, shown.current, lastId.current);
+    if (!q) return false;
     lastId.current = q.id;
     shown.current.set(q.id, (shown.current.get(q.id) ?? 0) + 1);
     setPose(randomPose());
     setLayout(randomLayout());
     setLeaving(false);
     setQuote(q);
-  }, [pool]);
+    setCycle((n) => n + 1);
+    return true;
+  }, []);
 
   useEffect(() => {
     shown.current = new Map();
@@ -44,23 +46,29 @@ export function useVerseCycle(
 
   useEffect(() => {
     if (quotes.length === 0 || quote) return;
-    next();
-  }, [quotes.length, quote, next]);
+    pick();
+  }, [quotes.length, quote, pick, resetKey]);
 
   useEffect(() => {
     if (!quote || !playing) return;
+    let cancelled = false;
     const n = 2 + verseBodyLines(quote).length;
     const fadeInMs = n * 780 + 1100;
     const hold = Math.max(4000, dwellSec * 1000);
-    const t = window.setTimeout(() => setLeaving(true), fadeInMs + hold);
-    return () => window.clearTimeout(t);
-  }, [quote, playing, dwellSec]);
-
-  useEffect(() => {
-    if (!leaving) return;
-    const t = window.setTimeout(() => next(), 900);
-    return () => window.clearTimeout(t);
-  }, [leaving, next]);
+    const fadeOutMs = 900;
+    const fadeAt = window.setTimeout(() => {
+      if (!cancelled) setLeaving(true);
+    }, fadeInMs + hold);
+    const nextAt = window.setTimeout(() => {
+      if (cancelled) return;
+      if (!pick()) setQuote(null);
+    }, fadeInMs + hold + fadeOutMs);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(fadeAt);
+      window.clearTimeout(nextAt);
+    };
+  }, [cycle, quote, playing, dwellSec, pick]);
 
   return { quote, pose, layout, leaving, hits: quote ? pool.find((p) => p.id === quote.id)?.hits ?? 0 : 0 };
 }

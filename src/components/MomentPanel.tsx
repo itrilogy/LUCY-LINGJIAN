@@ -96,7 +96,7 @@ export function MomentPanel({ hit, now, locating, weatherOk }: {
     <div className={`moment ${hit.weather} ${hit.dayPart}`}>
       <div className="moment-veil" aria-hidden />
       <div className="moment-top">
-        <span className="moment-kicker">此时此刻</span>
+        <span className="moment-kicker">此时·此刻·此地</span>
         {hit.city && <span className="moment-city">{hit.city}</span>}
       </div>
       <div className="moment-clock">

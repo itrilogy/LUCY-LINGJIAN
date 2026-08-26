@@ -91,7 +91,7 @@ export function composeMomentMix(catalog: Catalog, hit: MomentHit): Mix {
   return {
     schema_version: 1,
     id: ulid(),
-    name: `此时此刻 · ${hit.labelZh}`,
+    name: hit.city ? `此时·此刻·此地 · ${hit.city} · ${hit.labelZh}` : `此时·此刻·此地 · ${hit.labelZh}`,
     created_at: now,
     updated_at: now,
     master_volume: 0.82,

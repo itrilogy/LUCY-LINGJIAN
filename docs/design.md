@@ -110,7 +110,7 @@ The requirement is explicit: v1 is a website runnable via `npm run dev` / `npm r
 | K5 | **Mix persistence = filesystem JSON via the thin server** (`data/mixes/<id>/mix.json`). IndexedDB is a **read-through cache** of the last mix only | Mixes are grep-able JSON. Play backgrounds do not live next to mixes; they are a shared tagged library. |
 | K6 | **Play-page progress is a session timer** for mixes; file-relative for single-file play | A mix of looping/crossfading tracks has no shared “song length”. Lying with the loudest track’s position is worse than an honest elapsed clock. |
 | K7 | **Effect compositor overlays all unmuted tracks**, intensity weighted by track volume, with a global particle budget | Multi-category mixes should feel like rain *and* fire, not a hard switch. Cap work so 8 tracks cannot spawn 8× particles. |
-| K8 | **Pre-generated tagged stills, no runtime image gen** | 30 stills in `asset/Backgrounds/` (8 categories, distinctive files, QuietNight scene, common 2-tag mixes). `matchBackground(tagsFromPlay(tracks))` scores hit/extra/missing; single-tag plays use `defaults`. Overlay light is CSS + Canvas, not a new bitmap. |
+| K8 | **Pre-generated tagged stills, no runtime image gen** | 31 stills in `asset/Backgrounds/` (categories + QuietNight + Drive/醒律 + common 2-tag mixes). `matchBackground(tagsFromPlay(tracks))` scores hit/extra/missing then **weighted-random** among positive scores; `defaults` are a bonus / last resort, not a lock. Overlay light is CSS + Canvas, not a new bitmap. |
 | K9 | **Bind `127.0.0.1`, personal-use banner; v1 is not a public site** | Apple Comfort Sounds are not licensed for redistribution. Thunder WAV is CC0; two OFS MP3s need attribution. **Future public deploy (chosen path):** drop the Apple `.m4a` tree and substitute CC0 beds. Keep LegalGate + loopback + README “do not push Apple m4a to a public remote” in v1. No v1 asset-swap PR. |
 | K10 | **Equal-power (cosine) crossfade**; if next file is not ready, **extend current** (loop/continue) then fade | Prevents a silence hole on slow prefetch of long stream files (Night_1–6, 10-min beds, or QuietNight when it is an explicit file track). |
 | K11 | **Zustand + react-router-dom**, no Redux, no CSS framework beyond a tiny design token file | Two screens. A component library would densify the UI against the “extremely minimal” requirement. |
@@ -818,11 +818,9 @@ No WebGL in v1. Canvas 2D is enough and easier to pause. A WebGL grain shader is
 
 ### 11. Pre-generated backgrounds + tag hit
 
-Authoritative catalog: `asset/Backgrounds/catalog.json` (30 stills). Matcher: `asset/Backgrounds/match.js` (`tagsFromPlay` → `matchBackground`). Preview: `asset/Backgrounds/preview.html`.
+Authoritative catalog: `asset/Backgrounds/catalog.json` (31 stills). Matcher: `src/backgrounds/match.ts` (`tagsFromPlay` → `matchBackground` → `effectsFromTags`).
 
-Play **never** calls an image model. Hono serves the folder at `/backgrounds/*` (immutable cache). Single-tag plays use `catalog.defaults` (e.g. `rain` → `rain-window.jpg`, `quietnight` → `night-quiet.jpg`). Two-or-more tags score `3·|hit| − 0.4·|extra| − 0.2·|missing|` plus a subset bonus; first legal mix still (`mix-rain-fire`, `mix-quiet-rain`, …) wins over a one-tag still that would leave tags unmatched.
-
-Each still also names overlay `effects[]` and a `light` preset (warm shaft, moon path, storm flash, …). The equalizer + Ken Burns + vignette run on every play page; category particles follow `effects`.
+Play **never** calls an image model. Hono serves the folder at `/backgrounds/*`. Scores use hit/extra/missing on **core** sound tags; mood extras (dawn, cool, …) only bonus. `defaults[id]` adds a modest bonus rather than forcing one still. Among positive scores, pick weighted-random with seed `mix.id`. Overlay FX is the union of the still’s `effects[]` and tag signatures (rain always `raindrops`, fire always `embers`, mix rain+fire keeps both). 2D compositor mounts immediately; WebGL glass/ripples take over those layers if they boot. Ken Burns + vignette always run.
 
 CSS gradients below are **last-resort** if a jpeg 404s:
 

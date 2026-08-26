@@ -23,7 +23,8 @@ export type EffectId =
   | "waves"
   | "ripples"
   | "fireflies"
-  | "lightning";
+  | "lightning"
+  | "pulse";
 
 export type CategoryId =
   | "noise"
@@ -33,7 +34,8 @@ export type CategoryId =
   | "ocean"
   | "stream"
   | "night"
-  | "thunder";
+  | "thunder"
+  | "drive";
 
 export type Category = {
   id: CategoryId;
@@ -127,7 +129,7 @@ export function enrichCatalog(raw: {
   const files: CatalogFile[] = raw.files.map((f) => ({
     ...f,
     url: "/sounds/" + f.path.split("/").map(encodeURIComponent).join("/"),
-    standalone_scene: f.id === "quietnight",
+    standalone_scene: f.id === "quietnight" || f.id === "drive",
     playback: STREAM_IDS.has(f.id) || f.bytes >= STREAM_BYTES ? "stream" : "buffer",
   }));
 
@@ -140,6 +142,15 @@ export function enrichCatalog(raw: {
       description_zh: "长时长独立场景，不是夜晚变体",
       effect: "fireflies",
       sort: 7.5,
+    },
+    {
+      id: "drive",
+      file_id: "drive",
+      label_zh: "醒律",
+      label_en: "Drive",
+      description_zh: "贝斯、吉他与鼓点，用来点起能量的独立场景",
+      effect: "pulse",
+      sort: 9,
     },
   ];
 
@@ -483,13 +494,13 @@ import type { BgCatalog } from "../backgrounds/match";
 import type { Quote } from "../poetry/types";
 
 export async function fetchCatalog(): Promise<Catalog> {
-  const r = await fetch("/api/catalog");
+  const r = await fetch("/api/catalog", { cache: "no-store" });
   if (!r.ok) throw new Error("catalog");
   return r.json();
 }
 
 export async function fetchBackgrounds(): Promise<BgCatalog> {
-  const r = await fetch("/backgrounds/catalog.json");
+  const r = await fetch("/backgrounds/catalog.json", { cache: "no-store" });
   if (!r.ok) throw new Error("backgrounds");
   return r.json();
 }
@@ -1159,6 +1170,7 @@ export class MixEngine {
       kicks.push(p.kick());
     }
     if (this.players.size === 0) throw new Error("没有轨道能够开始播放");
+    this.emit();
     const outcomes = await Promise.all(kicks);
     this.pausedAccum = sessionCarry;
     const audible = outcomes.some((o) => o === "ok" || o === "pending");
@@ -1272,6 +1284,8 @@ function sleep(ms: number): Promise<void> {
 }
 
 // ===== FILE: src/backgrounds/match.ts =====
+import type { EffectId } from "../../shared/catalog";
+
 export type BgCatalog = {
   matching: {
     hit_weight: number;
@@ -1317,42 +1331,137 @@ export function tagsFromPlay(
   return [...tags];
 }
 
-function scoreImage(image: BgImage, playingTags: string[], matching: BgCatalog["matching"]): number {
-  const play = new Set(playingTags);
-  if (play.size === 0) return image.id === matching.fallback_id ? 0 : Number.NEGATIVE_INFINITY;
+const TAG_FX: Record<string, EffectId[]> = {
+  rain: ["raindrops"],
+  rainonroof: ["raindrops"],
+  thunder: ["lightning", "raindrops"],
+  storm: ["lightning", "raindrops"],
+  fire: ["embers"],
+  stream: ["ripples"],
+  steam: ["ripples"],
+  ocean: ["waves"],
+  night: ["fireflies"],
+  quietnight: ["fireflies"],
+  traffic: ["parallax"],
+  airplane: ["parallax"],
+  bus: ["parallax"],
+  train: ["parallax"],
+  boat: ["waves", "parallax"],
+  noise: ["grain"],
+  white: ["grain"],
+  pink: ["grain"],
+  brown: ["grain"],
+  babble: ["grain"],
+  drive: ["pulse", "embers", "parallax"],
+  pulse: ["pulse"],
+};
+
+/** Still effects plus signature FX from the playing tags (rain → glass, stream → ripples, …). */
+export function effectsFromTags(tags: string[], base: string[] = []): string[] {
+  const out = new Set(base);
+  for (const t of tags) for (const e of TAG_FX[t] ?? []) out.add(e);
+  return [...out];
+}
+
+function scoreImage(
+  image: BgImage,
+  core: Set<string>,
+  flavor: Set<string>,
+  matching: BgCatalog["matching"],
+): number {
+  if (core.size === 0 && flavor.size === 0) {
+    return image.id === matching.fallback_id ? 0 : Number.NEGATIVE_INFINITY;
+  }
   const img = new Set(image.tags);
   let hit = 0;
-  for (const t of img) if (play.has(t)) hit += 1;
-  if (hit === 0) return Number.NEGATIVE_INFINITY;
+  for (const t of img) if (core.has(t)) hit += 1;
+  if (hit === 0 && core.size > 0) return Number.NEGATIVE_INFINITY;
   let extra = 0;
-  for (const t of img) if (!play.has(t)) extra += 1;
+  for (const t of img) if (!core.has(t) && !flavor.has(t)) extra += 1;
   let missing = 0;
-  for (const t of play) if (!img.has(t)) missing += 1;
+  for (const t of core) if (!img.has(t)) missing += 1;
   let score =
     matching.hit_weight * hit - matching.extra_penalty * extra - matching.missing_penalty * missing;
   if (extra === 0 && hit > 0) score += matching.subset_bonus;
+  for (const t of flavor) if (img.has(t)) score += 0.45;
   return score;
 }
 
-export function matchBackground(playingTags: string[], catalog: BgCatalog): BgImage {
-  const unique = [...new Set(playingTags)];
-  if (unique.length === 1 && catalog.defaults?.[unique[0]]) {
-    const image = catalog.images.find((i) => i.id === catalog.defaults![unique[0]]);
-    if (image) return image;
+function hashSeed(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a += 0x6d2b79f5;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function pickWeighted<T>(items: T[], weights: number[], rng: () => number): T {
+  let sum = 0;
+  for (const w of weights) sum += w;
+  let r = rng() * sum;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i]!;
+    if (r <= 0) return items[i]!;
   }
-  let best: BgImage | null = null;
-  let bestScore = Number.NEGATIVE_INFINITY;
-  for (const image of catalog.images) {
-    const score = scoreImage(image, playingTags, catalog.matching);
-    if (score > bestScore || (score === bestScore && best && image.tags.length < best.tags.length)) {
-      bestScore = score;
-      best = image;
+  return items[items.length - 1]!;
+}
+
+export function matchBackground(
+  playingTags: string[],
+  catalog: BgCatalog,
+  hint?: { fileIds?: string[]; categoryIds?: string[]; seed?: string },
+): BgImage {
+  const vocab = new Set<string>();
+  for (const img of catalog.images) for (const t of img.tags) vocab.add(t);
+  const core = new Set<string>();
+  const flavor = new Set<string>();
+  for (const t of playingTags) {
+    if (!t) continue;
+    if (vocab.has(t) || catalog.file_tags?.[t] || catalog.category_tags?.[t] || catalog.defaults?.[t]) {
+      core.add(t);
+    } else flavor.add(t);
+  }
+
+  const scored = catalog.images.map((img) => ({
+    img,
+    score: scoreImage(img, core, flavor, catalog.matching),
+  }));
+
+  const hinted = [...(hint?.fileIds ?? []), ...(hint?.categoryIds ?? [])];
+  for (const id of hinted) {
+    const def = catalog.defaults?.[id];
+    if (!def) continue;
+    const row = scored.find((s) => s.img.id === def);
+    if (!row) continue;
+    if (row.score === Number.NEGATIVE_INFINITY) row.score = 0.2;
+    else row.score += 0.7;
+  }
+
+  const hits = scored.filter((s) => s.score > Number.NEGATIVE_INFINITY);
+  const fallback =
+    catalog.images.find((i) => i.id === catalog.matching.fallback_id) ?? catalog.images[0]!;
+  if (hits.length === 0) {
+    for (const id of hinted) {
+      const def = catalog.defaults?.[id];
+      const image = def ? catalog.images.find((i) => i.id === def) : undefined;
+      if (image) return image;
     }
+    return fallback;
   }
-  if (!best || bestScore === Number.NEGATIVE_INFINITY) {
-    return catalog.images.find((i) => i.id === catalog.matching.fallback_id) ?? catalog.images[0]!;
-  }
-  return best;
+
+  const best = Math.max(...hits.map((h) => h.score));
+  const rng = mulberry32(hashSeed(hint?.seed ?? playingTags.join("|")));
+  const weights = hits.map((h) => Math.exp((h.score - best) * 1.35));
+  return pickWeighted(hits, weights, rng).img;
 }
 
 // ===== FILE: src/play/nav.ts =====
@@ -1745,7 +1854,7 @@ export function composeMomentMix(catalog: Catalog, hit: MomentHit): Mix {
   return {
     schema_version: 1,
     id: ulid(),
-    name: `此时此刻 · ${hit.labelZh}`,
+    name: hit.city ? `此时·此刻·此地 · ${hit.city} · ${hit.labelZh}` : `此时·此刻·此地 · ${hit.labelZh}`,
     created_at: now,
     updated_at: now,
     master_volume: 0.82,
@@ -1925,10 +2034,11 @@ export function pickWeighted(
 }
 
 export function randomPose(): { side: "left" | "right"; topPct: number; insetPct: number } {
-  const side: "left" | "right" = Math.random() < 0.62 ? "left" : "right";
-  const topPct = side === "left" ? 30 + Math.random() * 28 : 42 + Math.random() * 18;
-  const insetPct = 4.5 + Math.random() * 7.5;
-  return { side, topPct, insetPct };
+  return {
+    side: "left",
+    topPct: 28 + Math.random() * 32,
+    insetPct: 4.5 + Math.random() * 8,
+  };
 }
 
 // ===== FILE: src/poetry/useVerseCycle.ts =====
@@ -1951,23 +2061,25 @@ export function useVerseCycle(
   const [pose, setPose] = useState<Pose>(() => randomPose());
   const [layout, setLayout] = useState<"vertical" | "horizontal">(() => randomLayout());
   const [leaving, setLeaving] = useState(false);
+  const [cycle, setCycle] = useState(0);
 
   const expanded = useMemo(() => expandTags(playTags, soundMap), [playTags, soundMap]);
   const pool = useMemo(() => scorePool(quotes, expanded), [quotes, expanded]);
+  const poolRef = useRef(pool);
+  poolRef.current = pool;
 
-  const next = useCallback(() => {
-    const q = pickWeighted(pool, shown.current, lastId.current);
-    if (!q) {
-      setQuote(null);
-      return;
-    }
+  const pick = useCallback(() => {
+    const q = pickWeighted(poolRef.current, shown.current, lastId.current);
+    if (!q) return false;
     lastId.current = q.id;
     shown.current.set(q.id, (shown.current.get(q.id) ?? 0) + 1);
     setPose(randomPose());
     setLayout(randomLayout());
     setLeaving(false);
     setQuote(q);
-  }, [pool]);
+    setCycle((n) => n + 1);
+    return true;
+  }, []);
 
   useEffect(() => {
     shown.current = new Map();
@@ -1978,23 +2090,29 @@ export function useVerseCycle(
 
   useEffect(() => {
     if (quotes.length === 0 || quote) return;
-    next();
-  }, [quotes.length, quote, next]);
+    pick();
+  }, [quotes.length, quote, pick, resetKey]);
 
   useEffect(() => {
     if (!quote || !playing) return;
+    let cancelled = false;
     const n = 2 + verseBodyLines(quote).length;
     const fadeInMs = n * 780 + 1100;
     const hold = Math.max(4000, dwellSec * 1000);
-    const t = window.setTimeout(() => setLeaving(true), fadeInMs + hold);
-    return () => window.clearTimeout(t);
-  }, [quote, playing, dwellSec]);
-
-  useEffect(() => {
-    if (!leaving) return;
-    const t = window.setTimeout(() => next(), 900);
-    return () => window.clearTimeout(t);
-  }, [leaving, next]);
+    const fadeOutMs = 900;
+    const fadeAt = window.setTimeout(() => {
+      if (!cancelled) setLeaving(true);
+    }, fadeInMs + hold);
+    const nextAt = window.setTimeout(() => {
+      if (cancelled) return;
+      if (!pick()) setQuote(null);
+    }, fadeInMs + hold + fadeOutMs);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(fadeAt);
+      window.clearTimeout(nextAt);
+    };
+  }, [cycle, quote, playing, dwellSec, pick]);
 
   return { quote, pose, layout, leaving, hits: quote ? pool.find((p) => p.id === quote.id)?.hits ?? 0 : 0 };
 }
@@ -2094,7 +2212,8 @@ type Particle =
   | { kind: "spark"; x: number; y: number; life: number; r: number }
   | { kind: "bokeh"; x: number; y: number; z: number; vx: number; r: number }
   | { kind: "scratch"; x: number; life: number; thick: number; len: number }
-  | { kind: "dust"; x: number; y: number; r: number; life: number };
+  | { kind: "dust"; x: number; y: number; r: number; life: number }
+  | { kind: "kick"; x: number; y: number; r: number; vr: number; life: number; thick: number };
 
 export const LIGHT: Record<string, [string, string, string]> = {
   "cool-fog": ["48%", "42%", "rgba(180,200,220,.4)"],
@@ -2119,6 +2238,7 @@ export const LIGHT: Record<string, [string, string, string]> = {
   "storm-flash": ["60%", "35%", "rgba(220,230,255,.2)"],
   "split-warm-cool": ["28%", "60%", "rgba(255,140,50,.45)"],
   "window-lamp": ["78%", "42%", "rgba(255,200,110,.4)"],
+  "beat-glow": ["62%", "68%", "rgba(255,150,50,.5)"],
 };
 
 export class EffectCompositor {
@@ -2135,6 +2255,7 @@ export class EffectCompositor {
   private rainWait = 0;
   private glassWait = 0;
   private rippleWait = 0;
+  private pulseWait = 0;
   private bgImg: HTMLImageElement | null = null;
   shake = { x: 0, y: 0, r: 0 };
 
@@ -2149,6 +2270,7 @@ export class EffectCompositor {
     this.rainWait = 0;
     this.glassWait = 0;
     this.rippleWait = 0;
+    this.pulseWait = 0;
   }
 
   setBackground(url: string | null): void {
@@ -2691,6 +2813,38 @@ export class EffectCompositor {
       }
     }
 
+    if (this.effects.includes("pulse")) {
+      this.pulseWait -= dt;
+      if (this.pulseWait <= 0) {
+        this.flash = Math.max(this.flash, 0.16);
+        this.particles.push({
+          kind: "kick",
+          x: w * (0.42 + Math.random() * 0.2),
+          y: h * (0.62 + Math.random() * 0.18),
+          r: 10 * dpr,
+          vr: 0.11 + Math.random() * 0.04,
+          life: 1,
+          thick: 2.2 + Math.random() * 1.2,
+        });
+        this.particles.push({
+          kind: "spark",
+          x: w * (0.25 + Math.random() * 0.5),
+          y: h * (0.55 + Math.random() * 0.3),
+          life: 1,
+          r: 3 + Math.random() * 5,
+        });
+        this.shake = { x: (Math.random() - 0.5) * 2.4, y: (Math.random() - 0.5) * 1.4, r: (Math.random() - 0.5) * 0.12 };
+        this.pulseWait = 430 + Math.random() * 50;
+      }
+      if (this.flash > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = `rgba(255,140,40,${0.12 * this.flash})`;
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+      }
+    }
+
     const cap: Record<string, number> = {
       embers: 90,
       fireflies: 48,
@@ -2811,6 +2965,25 @@ export class EffectCompositor {
         this.stepFly(p, now, dt, dpr, w, h);
         this.drawFly(ctx, p, now, dpr);
         return true;
+      }
+      if (p.kind === "kick") {
+        p.r += dt * p.vr;
+        p.life -= dt * 0.0009;
+        const a = Math.max(0, p.life);
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.strokeStyle = `rgba(255,170,70,${0.55 * a})`;
+        ctx.lineWidth = Math.max(1, p.thick * a) * dpr;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.r, p.r * 0.42, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(0,210,255,${0.22 * a})`;
+        ctx.lineWidth = Math.max(0.6, p.thick * 0.4) * dpr;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.r * 0.78, p.r * 0.32, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        return p.life > 0;
       }
       if (p.kind === "ring") {
         if (p.delay > 0) {
@@ -3856,7 +4029,7 @@ export function MomentPanel({ hit, now, locating, weatherOk }: {
     <div className={`moment ${hit.weather} ${hit.dayPart}`}>
       <div className="moment-veil" aria-hidden />
       <div className="moment-top">
-        <span className="moment-kicker">此时此刻</span>
+        <span className="moment-kicker">此时·此刻·此地</span>
         {hit.city && <span className="moment-city">{hit.city}</span>}
       </div>
       <div className="moment-clock">
@@ -4004,8 +4177,8 @@ export function LibraryPage() {
         <p className="hint">循环混音 · 无时限 · 标签背景</p>
         <div className="brand-ops">
           <button type="button" className="about-btn" onClick={() => setAbout(true)}>关于</button>
-          <button type="button" className="now-btn" title="按此刻天气与时辰命中标签，随机组混音" onClick={() => playMoment()}>
-            此时此刻
+          <button type="button" className="now-btn" title="按此时此刻此地的天气与时辰命中标签，随机组混音" onClick={() => playMoment()}>
+            此时·此刻·此地
           </button>
         </div>
         <h2>场景</h2>
@@ -4022,7 +4195,7 @@ export function LibraryPage() {
           );
         })}
         <h2>类别</h2>
-        {catalog.categories.map((c) => (
+        {catalog.categories.filter((c) => categoryPool(c.id, catalog.files).length > 0).map((c) => (
           <div
             className={"row" + (openCat === c.id ? " on" : "")}
             key={c.id}
@@ -4281,10 +4454,11 @@ em { color: var(--muted); font-style: normal; font-size: 11px; }
 // ===== FILE: src/pages/PlayPage.tsx =====
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import type { Mix } from "../../shared/mixSchema";
+import type { Catalog } from "../../shared/catalog";
+import type { Mix, MixTrack } from "../../shared/mixSchema";
 import { fetchMix, fetchPoetry } from "../api/client";
 import { engine, type EngineSnapshot } from "../audio/MixEngine";
-import { matchBackground, tagsFromPlay } from "../backgrounds/match";
+import { effectsFromTags, matchBackground, tagsFromPlay } from "../backgrounds/match";
 import { EffectCompositor, LIGHT } from "../effects/compositor";
 import { attachRainGlass, detachRainGlass, type RainGlass } from "../effects/RainGlass";
 import { WaterRipple } from "../effects/WaterRipple";
@@ -4297,6 +4471,8 @@ import { useVerseCycle } from "../poetry/useVerseCycle";
 import type { Quote } from "../poetry/types";
 import type { PlayNavState } from "../play/nav";
 import { isReloadNavigation, readPlaySession, writePlaySession } from "../play/session";
+
+const EMPTY_TAGS: string[] = [];
 
 export function PlayPage() {
   const nav = useNavigate();
@@ -4324,9 +4500,7 @@ export function PlayPage() {
     const n = Number(localStorage.getItem("voicestream_verse_dwell"));
     return Number.isFinite(n) && n >= 6 && n <= 60 ? n : 16;
   });
-  const [playSession, setPlaySession] = useState(0);
   const [about, setAbout] = useState(false);
-  const prevStatus = useRef(snap.status);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glassSlotRef = useRef<HTMLDivElement>(null);
   const waterCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -4367,15 +4541,8 @@ export function PlayPage() {
   }, []);
 
   useEffect(() => {
-    if (prevStatus.current === "idle" && snap.status === "playing") {
-      setPlaySession((n) => n + 1);
-    }
-    prevStatus.current = snap.status;
-  }, [snap.status]);
-
-  useEffect(() => {
     if (navState.mix) {
-      setMix(navState.mix);
+      setMix((prev) => (prev?.id === navState.mix!.id ? prev : navState.mix!));
       return;
     }
     if (!catalog) return;
@@ -4384,19 +4551,31 @@ export function PlayPage() {
       try {
         if (params.mixId) {
           const m = await fetchMix(params.mixId);
-          if (!cancelled) setMix(m);
+          if (!cancelled) setMix((prev) => (prev?.id === m.id ? prev : m));
           return;
         }
         if (params.fileId) {
           const f = catalog.files.find((x) => x.id === params.fileId);
           if (!f) throw new Error("没有这个文件");
-          if (!cancelled) setMix(ephemeralFileMix(f));
+          if (!cancelled) {
+            setMix((prev) =>
+              prev?.tracks.length === 1 && prev.tracks[0]?.kind === "file" && prev.tracks[0].target_id === f.id
+                ? prev
+                : ephemeralFileMix(f),
+            );
+          }
           return;
         }
         if (params.categoryId) {
           const c = catalog.categories.find((x) => x.id === params.categoryId);
           if (!c) throw new Error("没有这个类别");
-          if (!cancelled) setMix(ephemeralCategoryMix(c));
+          if (!cancelled) {
+            setMix((prev) =>
+              prev?.tracks.length === 1 && prev.tracks[0]?.kind === "category" && prev.tracks[0].target_id === c.id
+                ? prev
+                : ephemeralCategoryMix(c),
+            );
+          }
         }
       } catch (e) {
         if (!cancelled) setErr(e instanceof Error ? e.message : "无法载入");
@@ -4407,49 +4586,51 @@ export function PlayPage() {
     };
   }, [catalog, params.mixId, params.fileId, params.categoryId, navState.mix]);
 
-  const momentTags = navState.momentTags ?? [];
+  const momentTags = navState.momentTags ?? EMPTY_TAGS;
+
+  const playHint = useMemo(() => {
+    if (!mix) return { fileIds: [] as string[], categoryIds: [] as string[], tags: [] as string[] };
+    const fileIds = mix.tracks.filter((t) => t.kind === "file").map((t) => t.target_id);
+    const categoryIds = mix.tracks.filter((t) => t.kind === "category").map((t) => t.target_id);
+    const tags = backgrounds
+      ? tagsFromPlay(
+          {
+            fileIds,
+            categoryIds,
+            sceneIds: [
+              ...(fileIds.includes("quietnight") ? ["quietnight"] : []),
+              ...(fileIds.includes("drive") ? ["drive"] : []),
+            ],
+            extra: momentTags,
+          },
+          backgrounds,
+        )
+      : [];
+    return { fileIds, categoryIds, tags };
+  }, [mix, backgrounds, momentTags]);
 
   const bg = useMemo(() => {
     if (!mix || !backgrounds) return null;
-    const fileIds = mix.tracks.filter((t) => t.kind === "file").map((t) => t.target_id);
-    const categoryIds = mix.tracks.filter((t) => t.kind === "category").map((t) => t.target_id);
-    const tags = tagsFromPlay(
-      {
-        fileIds,
-        categoryIds,
-        sceneIds: fileIds.includes("quietnight") ? ["quietnight"] : [],
-        extra: momentTags,
-      },
-      backgrounds,
-    );
-    return matchBackground(tags, backgrounds);
-  }, [mix, backgrounds, momentTags]);
+    return matchBackground(playHint.tags, backgrounds, {
+      fileIds: playHint.fileIds,
+      categoryIds: playHint.categoryIds,
+      seed: mix.id,
+    });
+  }, [mix, backgrounds, playHint]);
 
   const playTags = useMemo(() => {
-    if (!mix || !backgrounds) return [];
-    const fileIds = mix.tracks.filter((t) => t.kind === "file").map((t) => t.target_id);
-    const categoryIds = mix.tracks.filter((t) => t.kind === "category").map((t) => t.target_id);
-    const tags = tagsFromPlay(
-      {
-        fileIds,
-        categoryIds,
-        sceneIds: fileIds.includes("quietnight") ? ["quietnight"] : [],
-        extra: momentTags,
-      },
-      backgrounds,
-    );
+    const tags = [...playHint.tags];
     if (bg) tags.push(...bg.tags);
     return [...new Set(tags)];
-  }, [mix, backgrounds, bg, momentTags]);
+  }, [playHint, bg]);
 
-  const verse = useVerseCycle(
-    quotes,
-    soundMap,
-    playTags,
-    true,
-    dwellSec,
-    `${mix?.id ?? ""}:${playSession}`,
+  const playEffects = useMemo(
+    () => effectsFromTags(playHint.tags, bg?.effects ?? []),
+    [playHint, bg],
   );
+  const fxKey = playEffects.join("|");
+
+  const verse = useVerseCycle(quotes, soundMap, playTags, true, dwellSec, mix?.id ?? "");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -4481,39 +4662,45 @@ export function PlayPage() {
   }, []);
 
   useEffect(() => {
-    const effects = bg?.effects ?? [];
-    const glass = effects.includes("raindrops");
+    const effects = playEffects;
+    const url = bg ? `/backgrounds/${bg.file}` : null;
+    const wantGlass = effects.includes("raindrops");
+    const wantWater = effects.includes("ripples") && !wantGlass;
+    const storm = effects.includes("lightning");
     let cancelled = false;
-    const timer = window.setTimeout(() => {
-      void (async () => {
-        if (cancelled) return;
-        const rain = rainRef.current;
-        const water = waterRef.current;
-        const url = bg ? `/backgrounds/${bg.file}` : null;
-        const wantWater = effects.includes("ripples") && !glass;
-        const glassOk = glass && url
-          ? Boolean(await rain?.setScene(url, effects.includes("lightning") ? "storm" : "rain"))
-          : false;
-        if (cancelled) return;
-        if (!glassOk) await rain?.setScene(null);
-        const waterOk = wantWater && url ? Boolean(await water?.setScene(url)) : false;
-        if (cancelled) return;
-        if (!waterOk) await water?.setScene(null);
-        if (cancelled) return;
-        fxRef.current?.setEffects(
-          effects.filter((e) => {
-            if (e === "raindrops" && glassOk) return false;
-            if (e === "ripples" && waterOk) return false;
-            return true;
-          }),
-        );
-      })();
-    }, 80);
+
+    const apply2d = (glassOk: boolean, waterOk: boolean) => {
+      if (cancelled) return;
+      fxRef.current?.resize();
+      fxRef.current?.setEffects(
+        effects.filter((e) => {
+          if (e === "raindrops" && glassOk) return false;
+          if (e === "ripples" && waterOk) return false;
+          return true;
+        }),
+      );
+    };
+
+    apply2d(false, false);
+
+    void (async () => {
+      const rain = rainRef.current;
+      const water = waterRef.current;
+      const glassOk = wantGlass && url ? Boolean(await rain?.setScene(url, storm ? "storm" : "rain")) : false;
+      if (cancelled) return;
+      if (!wantGlass || !glassOk) await rain?.setScene(null);
+      if (cancelled) return;
+      const waterOk = wantWater && url ? Boolean(await water?.setScene(url)) : false;
+      if (cancelled) return;
+      if (!wantWater || !waterOk) await water?.setScene(null);
+      if (cancelled) return;
+      apply2d(glassOk, waterOk);
+    })();
+
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
     };
-  }, [bg]);
+  }, [bg, fxKey, playEffects]);
 
   useEffect(() => {
     let raf = 0;
@@ -4566,6 +4753,7 @@ export function PlayPage() {
 
   const light = LIGHT[bg?.light ?? ""] ?? ["50%", "60%", "rgba(255,255,255,.2)"];
   const hasCategory = mix?.tracks.some((t) => t.kind === "category") ?? false;
+  const nowRows = useMemo(() => mixRows(mix, snap, catalog), [mix, snap, catalog]);
   const hours = Math.floor(snap.sessionSec / 3600);
   const mins = Math.floor((snap.sessionSec % 3600) / 60);
   const secs = Math.floor(snap.sessionSec % 60);
@@ -4616,7 +4804,7 @@ export function PlayPage() {
       <div className="stage" aria-hidden>
         <div className="bg-wrap">
           <div
-            className={"bg" + (bg?.effects?.includes("grain") ? " grain" : "")}
+            className={"bg" + (playEffects.includes("grain") ? " grain" : "")}
             ref={bgRef}
             style={{ backgroundImage: bg ? `url(/backgrounds/${bg.file})` : undefined }}
           />
@@ -4631,15 +4819,22 @@ export function PlayPage() {
         <div className="vignette" />
       </div>
       {verse.quote && (
-        <VerseCard quote={verse.quote} pose={verse.pose} leaving={verse.leaving} layout={verse.layout} />
+        <VerseCard
+          key={`${verse.quote.id}:${verse.layout}:${verse.pose.topPct}`}
+          quote={verse.quote}
+          pose={verse.pose}
+          leaving={verse.leaving}
+          layout={verse.layout}
+        />
       )}
+      <div className="hud">
       <header>
         <button type="button" onClick={() => { void engine.stop(250); nav("/"); }}>← 曲库</button>
         <b>{mix?.name ?? "…"}</b>
         <span>{bg?.label_zh}</span>
       </header>
       <div className="now">
-        {snap.current.map((c) => (
+        {nowRows.map((c) => (
           <div key={c.trackId}>
             <em>{c.label}{c.muted ? " · 静音" : ""}</em>
             <i style={{ transform: `scaleX(${Math.max(0.02, c.progress)})` }} />
@@ -4714,17 +4909,54 @@ export function PlayPage() {
           <b>{formatPct(snap.master)}</b>
         </label>
       </div>
+      </div>
       {about && <AboutModal tone="play" onClose={() => setAbout(false)} />}
       <style>{playCss}</style>
     </div>
   );
 }
 
+function mixRows(mix: Mix | null, snap: EngineSnapshot, catalog: Catalog | null) {
+  if (snap.current.length > 0) {
+    return snap.current.map((c) => ({
+      trackId: c.trackId,
+      label: c.label,
+      muted: c.muted,
+      progress: c.progress,
+      volume: c.volume,
+    }));
+  }
+  if (!mix) return [];
+  return mix.tracks.map((t) => rowFromTrack(t, undefined, catalog));
+}
+
+function rowFromTrack(
+  t: MixTrack,
+  live: EngineSnapshot["current"][number] | undefined,
+  catalog: Catalog | null,
+) {
+  const fileId = live?.fileId || (t.kind === "file" ? t.target_id : "");
+  const file = fileId ? catalog?.files.find((f) => f.id === fileId) : undefined;
+  const cat = t.kind === "category" ? catalog?.categories.find((x) => x.id === t.target_id) : undefined;
+  return {
+    trackId: t.id,
+    label: live?.label || file?.label_zh || cat?.label_zh || t.target_id,
+    muted: live?.muted ?? t.muted,
+    progress: live?.progress ?? 0,
+    volume: live?.volume ?? t.volume,
+  };
+}
+
 const playCss = `
 .play { position: fixed; inset: 0; overflow: hidden; color: #f4efe6; isolation: isolate; }
 .stage {
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  isolation: isolate;
 }
+.hud {
+  position: absolute; inset: 0; z-index: 40; pointer-events: none;
+}
+.hud header, .hud .now, .hud .dock { pointer-events: auto; }
 .bg-wrap {
   position: absolute; inset: -10%;
   animation: ken 48s ease-in-out infinite alternate;
@@ -4762,21 +4994,29 @@ const playCss = `
 }
 @keyframes breathe { 0%,100% { opacity: .14 } 50% { opacity: .3 } }
 header {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+  position: absolute; top: 0; left: 0; right: 0; z-index: 31;
   display: flex; align-items: center; gap: 12px;
   padding: 18px 20px; background: linear-gradient(180deg, rgba(0,0,0,.45), transparent);
 }
 header b { letter-spacing: .12em; font-weight: 500; }
 header span { color: rgba(244,239,230,.5); font-size: 12px; margin-left: auto; }
-.now { position: absolute; top: 64px; right: 22px; z-index: 10; width: min(300px, 42vw); }
+.now {
+  position: absolute; top: 64px; right: 22px; z-index: 50;
+  width: min(300px, 42vw);
+  transform: translateZ(0);
+}
 .now div { margin-bottom: 12px; }
-.now em { display: block; font-style: normal; font-size: 11px; color: rgba(244,239,230,.55); margin-bottom: 3px; }
-.now i { display: block; height: 2px; width: 100%; background: #fff; transform-origin: left; opacity: .7; }
+.now em {
+  display: block; font-style: normal; font-size: 11px;
+  color: rgba(244,239,230,.82); margin-bottom: 3px;
+  text-shadow: 0 1px 10px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.9);
+}
+.now i { display: block; height: 2px; width: 100%; background: #fff; transform-origin: left; opacity: .85; }
 .tvol { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .tvol input { flex: 1; }
 .tvol b, .vol b { font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 500; min-width: 2.8em; text-align: right; }
 .dock {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 10;
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 31;
   padding: 18px 24px 28px;
   display: grid; justify-items: center; gap: 10px;
   background: linear-gradient(0deg, rgba(0,0,0,.55), transparent);
@@ -4796,7 +5036,7 @@ header span { color: rgba(244,239,230,.5); font-size: 12px; margin-left: auto; }
 .err { color: #ffb4a2; font-size: 12px; }
 .verse {
   position: absolute;
-  z-index: 11;
+  z-index: 8;
   margin: 0;
   pointer-events: none;
   color: rgba(252, 247, 236, 0.92);
@@ -4804,6 +5044,7 @@ header span { color: rgba(244,239,230,.5); font-size: 12px; margin-left: auto; }
   font-family: "Songti TC", "Kaiti TC", "STKaiti", "Songti SC", "Kaiti SC", "Source Han Serif TC", "Noto Serif TC", serif;
   transition: opacity 0.9s ease;
   max-height: 52vh;
+  max-width: min(42vw, 420px);
 }
 .verse.leaving { opacity: 0; }
 .verse .el {

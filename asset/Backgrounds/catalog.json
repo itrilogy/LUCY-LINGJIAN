@@ -27,14 +27,15 @@
     "steam": "stream-steam",
     "night": "night-forest",
     "quietnight": "night-quiet",
+    "drive": "drive-rehearsal",
     "thunder": "thunder-field"
   },
   "tag_vocabulary": {
-    "categories": ["noise", "traffic", "fire", "rain", "ocean", "stream", "night", "thunder"],
+    "categories": ["noise", "traffic", "fire", "rain", "ocean", "stream", "night", "thunder", "drive"],
     "files": [
       "white", "pink", "brown", "babble",
       "airplane", "boat", "bus", "train",
-      "rainonroof", "steam", "quietnight"
+      "rainonroof", "steam", "quietnight", "drive"
     ],
     "moods": ["indoor", "outdoor", "urban", "nature", "storm", "warm", "cool"]
   },
@@ -49,7 +50,8 @@
     "train": ["traffic", "train"],
     "rainonroof": ["rain", "rainonroof"],
     "steam": ["stream", "steam"],
-    "quietnight": ["quietnight", "night"]
+    "quietnight": ["quietnight", "night"],
+    "drive": ["drive", "pulse", "warm"]
   },
   "category_tags": {
     "noise": ["noise"],
@@ -59,7 +61,8 @@
     "ocean": ["ocean"],
     "stream": ["stream"],
     "night": ["night"],
-    "thunder": ["thunder", "rain"]
+    "thunder": ["thunder", "rain"],
+    "drive": ["drive"]
   },
   "images": [
     {
@@ -301,6 +304,14 @@
       "tags": ["traffic", "airplane", "thunder"],
       "effects": ["parallax", "lightning"],
       "light": "cabin-window"
+    },
+    {
+      "id": "drive-rehearsal",
+      "file": "drive-rehearsal.jpg",
+      "label_zh": "醒律排练房",
+      "tags": ["drive", "pulse", "warm"],
+      "effects": ["pulse", "embers", "parallax"],
+      "light": "beat-glow"
     }
   ]
 }

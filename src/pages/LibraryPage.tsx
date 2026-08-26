@@ -112,8 +112,8 @@ export function LibraryPage() {
         <p className="hint">循环混音 · 无时限 · 标签背景</p>
         <div className="brand-ops">
           <button type="button" className="about-btn" onClick={() => setAbout(true)}>关于</button>
-          <button type="button" className="now-btn" title="按此刻天气与时辰命中标签，随机组混音" onClick={() => playMoment()}>
-            此时此刻
+          <button type="button" className="now-btn" title="按此时此刻此地的天气与时辰命中标签，随机组混音" onClick={() => playMoment()}>
+            此时·此刻·此地
           </button>
         </div>
         <h2>场景</h2>
@@ -130,7 +130,7 @@ export function LibraryPage() {
           );
         })}
         <h2>类别</h2>
-        {catalog.categories.map((c) => (
+        {catalog.categories.filter((c) => categoryPool(c.id, catalog.files).length > 0).map((c) => (
           <div
             className={"row" + (openCat === c.id ? " on" : "")}
             key={c.id}

@@ -50,8 +50,9 @@ export function pickWeighted(
 }
 
 export function randomPose(): { side: "left" | "right"; topPct: number; insetPct: number } {
-  const side: "left" | "right" = Math.random() < 0.62 ? "left" : "right";
-  const topPct = side === "left" ? 30 + Math.random() * 28 : 42 + Math.random() * 18;
-  const insetPct = 4.5 + Math.random() * 7.5;
-  return { side, topPct, insetPct };
+  return {
+    side: "left",
+    topPct: 28 + Math.random() * 32,
+    insetPct: 4.5 + Math.random() * 8,
+  };
 }

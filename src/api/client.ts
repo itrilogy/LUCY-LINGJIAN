@@ -4,13 +4,13 @@ import type { BgCatalog } from "../backgrounds/match";
 import type { Quote } from "../poetry/types";
 
 export async function fetchCatalog(): Promise<Catalog> {
-  const r = await fetch("/api/catalog");
+  const r = await fetch("/api/catalog", { cache: "no-store" });
   if (!r.ok) throw new Error("catalog");
   return r.json();
 }
 
 export async function fetchBackgrounds(): Promise<BgCatalog> {
-  const r = await fetch("/backgrounds/catalog.json");
+  const r = await fetch("/backgrounds/catalog.json", { cache: "no-store" });
   if (!r.ok) throw new Error("backgrounds");
   return r.json();
 }

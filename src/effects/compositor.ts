@@ -51,7 +51,8 @@ type Particle =
   | { kind: "spark"; x: number; y: number; life: number; r: number }
   | { kind: "bokeh"; x: number; y: number; z: number; vx: number; r: number }
   | { kind: "scratch"; x: number; life: number; thick: number; len: number }
-  | { kind: "dust"; x: number; y: number; r: number; life: number };
+  | { kind: "dust"; x: number; y: number; r: number; life: number }
+  | { kind: "kick"; x: number; y: number; r: number; vr: number; life: number; thick: number };
 
 export const LIGHT: Record<string, [string, string, string]> = {
   "cool-fog": ["48%", "42%", "rgba(180,200,220,.4)"],
@@ -76,6 +77,7 @@ export const LIGHT: Record<string, [string, string, string]> = {
   "storm-flash": ["60%", "35%", "rgba(220,230,255,.2)"],
   "split-warm-cool": ["28%", "60%", "rgba(255,140,50,.45)"],
   "window-lamp": ["78%", "42%", "rgba(255,200,110,.4)"],
+  "beat-glow": ["62%", "68%", "rgba(255,150,50,.5)"],
 };
 
 export class EffectCompositor {
@@ -92,6 +94,7 @@ export class EffectCompositor {
   private rainWait = 0;
   private glassWait = 0;
   private rippleWait = 0;
+  private pulseWait = 0;
   private bgImg: HTMLImageElement | null = null;
   shake = { x: 0, y: 0, r: 0 };
 
@@ -106,6 +109,7 @@ export class EffectCompositor {
     this.rainWait = 0;
     this.glassWait = 0;
     this.rippleWait = 0;
+    this.pulseWait = 0;
   }
 
   setBackground(url: string | null): void {
@@ -648,6 +652,38 @@ export class EffectCompositor {
       }
     }
 
+    if (this.effects.includes("pulse")) {
+      this.pulseWait -= dt;
+      if (this.pulseWait <= 0) {
+        this.flash = Math.max(this.flash, 0.16);
+        this.particles.push({
+          kind: "kick",
+          x: w * (0.42 + Math.random() * 0.2),
+          y: h * (0.62 + Math.random() * 0.18),
+          r: 10 * dpr,
+          vr: 0.11 + Math.random() * 0.04,
+          life: 1,
+          thick: 2.2 + Math.random() * 1.2,
+        });
+        this.particles.push({
+          kind: "spark",
+          x: w * (0.25 + Math.random() * 0.5),
+          y: h * (0.55 + Math.random() * 0.3),
+          life: 1,
+          r: 3 + Math.random() * 5,
+        });
+        this.shake = { x: (Math.random() - 0.5) * 2.4, y: (Math.random() - 0.5) * 1.4, r: (Math.random() - 0.5) * 0.12 };
+        this.pulseWait = 430 + Math.random() * 50;
+      }
+      if (this.flash > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = `rgba(255,140,40,${0.12 * this.flash})`;
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+      }
+    }
+
     const cap: Record<string, number> = {
       embers: 90,
       fireflies: 48,
@@ -768,6 +804,25 @@ export class EffectCompositor {
         this.stepFly(p, now, dt, dpr, w, h);
         this.drawFly(ctx, p, now, dpr);
         return true;
+      }
+      if (p.kind === "kick") {
+        p.r += dt * p.vr;
+        p.life -= dt * 0.0009;
+        const a = Math.max(0, p.life);
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.strokeStyle = `rgba(255,170,70,${0.55 * a})`;
+        ctx.lineWidth = Math.max(1, p.thick * a) * dpr;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.r, p.r * 0.42, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(0,210,255,${0.22 * a})`;
+        ctx.lineWidth = Math.max(0.6, p.thick * 0.4) * dpr;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.r * 0.78, p.r * 0.32, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        return p.life > 0;
       }
       if (p.kind === "ring") {
         if (p.delay > 0) {

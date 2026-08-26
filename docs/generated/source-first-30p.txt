@@ -23,7 +23,8 @@ export type EffectId =
   | "waves"
   | "ripples"
   | "fireflies"
-  | "lightning";
+  | "lightning"
+  | "pulse";
 
 export type CategoryId =
   | "noise"
@@ -33,7 +34,8 @@ export type CategoryId =
   | "ocean"
   | "stream"
   | "night"
-  | "thunder";
+  | "thunder"
+  | "drive";
 
 export type Category = {
   id: CategoryId;
@@ -127,7 +129,7 @@ export function enrichCatalog(raw: {
   const files: CatalogFile[] = raw.files.map((f) => ({
     ...f,
     url: "/sounds/" + f.path.split("/").map(encodeURIComponent).join("/"),
-    standalone_scene: f.id === "quietnight",
+    standalone_scene: f.id === "quietnight" || f.id === "drive",
     playback: STREAM_IDS.has(f.id) || f.bytes >= STREAM_BYTES ? "stream" : "buffer",
   }));
 
@@ -140,6 +142,15 @@ export function enrichCatalog(raw: {
       description_zh: "长时长独立场景，不是夜晚变体",
       effect: "fireflies",
       sort: 7.5,
+    },
+    {
+      id: "drive",
+      file_id: "drive",
+      label_zh: "醒律",
+      label_en: "Drive",
+      description_zh: "贝斯、吉他与鼓点，用来点起能量的独立场景",
+      effect: "pulse",
+      sort: 9,
     },
   ];
 
@@ -483,13 +494,13 @@ import type { BgCatalog } from "../backgrounds/match";
 import type { Quote } from "../poetry/types";
 
 export async function fetchCatalog(): Promise<Catalog> {
-  const r = await fetch("/api/catalog");
+  const r = await fetch("/api/catalog", { cache: "no-store" });
   if (!r.ok) throw new Error("catalog");
   return r.json();
 }
 
 export async function fetchBackgrounds(): Promise<BgCatalog> {
-  const r = await fetch("/backgrounds/catalog.json");
+  const r = await fetch("/backgrounds/catalog.json", { cache: "no-store" });
   if (!r.ok) throw new Error("backgrounds");
   return r.json();
 }
@@ -1159,6 +1170,7 @@ export class MixEngine {
       kicks.push(p.kick());
     }
     if (this.players.size === 0) throw new Error("没有轨道能够开始播放");
+    this.emit();
     const outcomes = await Promise.all(kicks);
     this.pausedAccum = sessionCarry;
     const audible = outcomes.some((o) => o === "ok" || o === "pending");
@@ -1272,6 +1284,8 @@ function sleep(ms: number): Promise<void> {
 }
 
 // ===== FILE: src/backgrounds/match.ts =====
+import type { EffectId } from "../../shared/catalog";
+
 export type BgCatalog = {
   matching: {
     hit_weight: number;
@@ -1317,42 +1331,137 @@ export function tagsFromPlay(
   return [...tags];
 }
 
-function scoreImage(image: BgImage, playingTags: string[], matching: BgCatalog["matching"]): number {
-  const play = new Set(playingTags);
-  if (play.size === 0) return image.id === matching.fallback_id ? 0 : Number.NEGATIVE_INFINITY;
+const TAG_FX: Record<string, EffectId[]> = {
+  rain: ["raindrops"],
+  rainonroof: ["raindrops"],
+  thunder: ["lightning", "raindrops"],
+  storm: ["lightning", "raindrops"],
+  fire: ["embers"],
+  stream: ["ripples"],
+  steam: ["ripples"],
+  ocean: ["waves"],
+  night: ["fireflies"],
+  quietnight: ["fireflies"],
+  traffic: ["parallax"],
+  airplane: ["parallax"],
+  bus: ["parallax"],
+  train: ["parallax"],
+  boat: ["waves", "parallax"],
+  noise: ["grain"],
+  white: ["grain"],
+  pink: ["grain"],
+  brown: ["grain"],
+  babble: ["grain"],
+  drive: ["pulse", "embers", "parallax"],
+  pulse: ["pulse"],
+};
+
+/** Still effects plus signature FX from the playing tags (rain → glass, stream → ripples, …). */
+export function effectsFromTags(tags: string[], base: string[] = []): string[] {
+  const out = new Set(base);
+  for (const t of tags) for (const e of TAG_FX[t] ?? []) out.add(e);
+  return [...out];
+}
+
+function scoreImage(
+  image: BgImage,
+  core: Set<string>,
+  flavor: Set<string>,
+  matching: BgCatalog["matching"],
+): number {
+  if (core.size === 0 && flavor.size === 0) {
+    return image.id === matching.fallback_id ? 0 : Number.NEGATIVE_INFINITY;
+  }
   const img = new Set(image.tags);
   let hit = 0;
-  for (const t of img) if (play.has(t)) hit += 1;
-  if (hit === 0) return Number.NEGATIVE_INFINITY;
+  for (const t of img) if (core.has(t)) hit += 1;
+  if (hit === 0 && core.size > 0) return Number.NEGATIVE_INFINITY;
   let extra = 0;
-  for (const t of img) if (!play.has(t)) extra += 1;
+  for (const t of img) if (!core.has(t) && !flavor.has(t)) extra += 1;
   let missing = 0;
-  for (const t of play) if (!img.has(t)) missing += 1;
+  for (const t of core) if (!img.has(t)) missing += 1;
   let score =
     matching.hit_weight * hit - matching.extra_penalty * extra - matching.missing_penalty * missing;
   if (extra === 0 && hit > 0) score += matching.subset_bonus;
+  for (const t of flavor) if (img.has(t)) score += 0.45;
   return score;
 }
 
-export function matchBackground(playingTags: string[], catalog: BgCatalog): BgImage {
-  const unique = [...new Set(playingTags)];
-  if (unique.length === 1 && catalog.defaults?.[unique[0]]) {
-    const image = catalog.images.find((i) => i.id === catalog.defaults![unique[0]]);
-    if (image) return image;
+function hashSeed(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a += 0x6d2b79f5;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function pickWeighted<T>(items: T[], weights: number[], rng: () => number): T {
+  let sum = 0;
+  for (const w of weights) sum += w;
+  let r = rng() * sum;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i]!;
+    if (r <= 0) return items[i]!;
   }
-  let best: BgImage | null = null;
-  let bestScore = Number.NEGATIVE_INFINITY;
-  for (const image of catalog.images) {
-    const score = scoreImage(image, playingTags, catalog.matching);
-    if (score > bestScore || (score === bestScore && best && image.tags.length < best.tags.length)) {
-      bestScore = score;
-      best = image;
+  return items[items.length - 1]!;
+}
+
+export function matchBackground(
+  playingTags: string[],
+  catalog: BgCatalog,
+  hint?: { fileIds?: string[]; categoryIds?: string[]; seed?: string },
+): BgImage {
+  const vocab = new Set<string>();
+  for (const img of catalog.images) for (const t of img.tags) vocab.add(t);
+  const core = new Set<string>();
+  const flavor = new Set<string>();
+  for (const t of playingTags) {
+    if (!t) continue;
+    if (vocab.has(t) || catalog.file_tags?.[t] || catalog.category_tags?.[t] || catalog.defaults?.[t]) {
+      core.add(t);
+    } else flavor.add(t);
+  }
+
+  const scored = catalog.images.map((img) => ({
+    img,
+    score: scoreImage(img, core, flavor, catalog.matching),
+  }));
+
+  const hinted = [...(hint?.fileIds ?? []), ...(hint?.categoryIds ?? [])];
+  for (const id of hinted) {
+    const def = catalog.defaults?.[id];
+    if (!def) continue;
+    const row = scored.find((s) => s.img.id === def);
+    if (!row) continue;
+    if (row.score === Number.NEGATIVE_INFINITY) row.score = 0.2;
+    else row.score += 0.7;
+  }
+
+  const hits = scored.filter((s) => s.score > Number.NEGATIVE_INFINITY);
+  const fallback =
+    catalog.images.find((i) => i.id === catalog.matching.fallback_id) ?? catalog.images[0]!;
+  if (hits.length === 0) {
+    for (const id of hinted) {
+      const def = catalog.defaults?.[id];
+      const image = def ? catalog.images.find((i) => i.id === def) : undefined;
+      if (image) return image;
     }
+    return fallback;
   }
-  if (!best || bestScore === Number.NEGATIVE_INFINITY) {
-    return catalog.images.find((i) => i.id === catalog.matching.fallback_id) ?? catalog.images[0]!;
-  }
-  return best;
+
+  const best = Math.max(...hits.map((h) => h.score));
+  const rng = mulberry32(hashSeed(hint?.seed ?? playingTags.join("|")));
+  const weights = hits.map((h) => Math.exp((h.score - best) * 1.35));
+  return pickWeighted(hits, weights, rng).img;
 }
 
 // ===== FILE: src/play/nav.ts =====
@@ -1389,112 +1498,3 @@ export function writePlaySession(path: string, snap: EngineSnapshot): void {
 }
 
 export function readPlaySession(): PlaySessionSave | null {
-  try {
-    const raw = sessionStorage.getItem(KEY);
-    if (!raw) return null;
-    const v = JSON.parse(raw) as PlaySessionSave;
-    if (!v?.path || (v.status !== "playing" && v.status !== "paused")) return null;
-    if (!Number.isFinite(v.sessionSec) || v.sessionSec < 0) v.sessionSec = 0;
-    return v;
-  } catch {
-    return null;
-  }
-}
-
-export function isReloadNavigation(): boolean {
-  const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-  if (nav?.type === "reload") return true;
-  const legacy = (performance as Performance & { navigation?: { type?: number } }).navigation;
-  return legacy?.type === 1;
-}
-
-// ===== FILE: src/moment/tags.ts =====
-export type DayPart = "dawn" | "morning" | "noon" | "afternoon" | "dusk" | "evening" | "midnight";
-
-export type WeatherKind = "clear" | "cloudy" | "fog" | "drizzle" | "rain" | "snow" | "storm";
-
-export type MomentHit = {
-  dayPart: DayPart;
-  weather: WeatherKind;
-  isDay: boolean;
-  tempC: number | null;
-  humidity: number | null;
-  windKmh: number | null;
-  city: string | null;
-  /** Union used for background / poetry / mix. */
-  tags: string[];
-  /** Sound-catalog tags that can become tracks. */
-  soundTags: string[];
-  labelZh: string;
-  weatherZh: string;
-  dayPartZh: string;
-};
-
-const DAY_PARTS: Array<{ id: DayPart; from: number; zh: string; tags: string[]; sound: string[] }> = [
-  { id: "midnight", from: 0, zh: "子夜", tags: ["midnight", "night-time", "cool", "indoor"], sound: ["quietnight", "night", "brown"] },
-  { id: "dawn", from: 5, zh: "黎明", tags: ["dawn", "cool", "outdoor", "nature"], sound: ["stream"] },
-  { id: "morning", from: 7, zh: "清晨", tags: ["day", "outdoor", "nature"], sound: ["stream"] },
-  { id: "noon", from: 11, zh: "正午", tags: ["day", "warm", "outdoor"], sound: ["ocean"] },
-  { id: "afternoon", from: 14, zh: "午后", tags: ["day", "warm", "outdoor"], sound: ["stream"] },
-  { id: "dusk", from: 17, zh: "黄昏", tags: ["dusk", "warm", "outdoor"], sound: ["fire", "ocean"] },
-  { id: "evening", from: 19, zh: "入夜", tags: ["night-time", "warm", "indoor"], sound: ["fire", "night"] },
-  { id: "midnight", from: 22, zh: "深夜", tags: ["midnight", "night-time", "cool", "indoor"], sound: ["quietnight", "night"] },
-];
-
-type WxSpec = { kind: WeatherKind; zh: string; tags: string[]; sound: string[] };
-
-function weatherSpec(code: number | null): WxSpec {
-  if (code == null) return { kind: "clear", zh: "未知", tags: [], sound: [] };
-  if (code === 0) return { kind: "clear", zh: "晴朗", tags: ["outdoor", "nature"], sound: [] };
-  if (code <= 3) return { kind: "cloudy", zh: "多云", tags: ["cool", "outdoor"], sound: ["stream"] };
-  if (code === 45 || code === 48) return { kind: "fog", zh: "雾", tags: ["cool", "indoor", "mist"], sound: ["brown", "steam"] };
-  if (code >= 51 && code <= 57) return { kind: "drizzle", zh: "毛毛雨", tags: ["cool", "indoor"], sound: ["rain", "rainonroof"] };
-  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) {
-    return { kind: "rain", zh: "雨", tags: ["cool", "indoor", "rain"], sound: ["rain", "rainonroof"] };
-  }
-  if ((code >= 71 && code <= 77) || code === 85 || code === 86) {
-    return { kind: "snow", zh: "雪", tags: ["cool", "nature", "indoor"], sound: ["white", "quietnight"] };
-  }
-  if (code >= 95) return { kind: "storm", zh: "雷暴", tags: ["storm", "indoor", "cool"], sound: ["thunder", "rain"] };
-  return { kind: "cloudy", zh: "阴", tags: ["cool"], sound: ["stream"] };
-}
-
-export function dayPartAt(d: Date): (typeof DAY_PARTS)[number] {
-  const h = d.getHours() + d.getMinutes() / 60;
-  let cur = DAY_PARTS[0]!;
-  for (const p of DAY_PARTS) if (h >= p.from) cur = p;
-  return cur;
-}
-
-export function hitFromClock(
-  d: Date,
-  weatherCode: number | null,
-  extras: { isDay?: boolean; tempC?: number | null; humidity?: number | null; windKmh?: number | null; city?: string | null } = {},
-): MomentHit {
-  const part = dayPartAt(d);
-  const wx = weatherSpec(weatherCode);
-  const isDay = extras.isDay ?? (d.getHours() >= 6 && d.getHours() < 19);
-  const soundTags = unique([
-    ...wx.sound,
-    ...part.sound.filter((t) => {
-      if (wx.kind === "storm" || wx.kind === "rain" || wx.kind === "drizzle") {
-        return t !== "ocean" && t !== "stream";
-      }
-      if (wx.kind === "fog") return t !== "ocean";
-      return true;
-    }),
-  ]);
-  if (!isDay && !soundTags.includes("night") && !soundTags.includes("quietnight")) {
-    soundTags.push("night");
-  }
-  const tags = unique([...wx.tags, ...part.tags, ...soundTags]);
-  return {
-    dayPart: part.id,
-    weather: wx.kind,
-    isDay,
-    tempC: extras.tempC ?? null,
-    humidity: extras.humidity ?? null,
-    windKmh: extras.windKmh ?? null,
-    city: extras.city ?? null,
-    tags,
-    soundTags,

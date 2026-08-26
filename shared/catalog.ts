@@ -6,7 +6,8 @@ export type EffectId =
   | "waves"
   | "ripples"
   | "fireflies"
-  | "lightning";
+  | "lightning"
+  | "pulse";
 
 export type CategoryId =
   | "noise"
@@ -16,7 +17,8 @@ export type CategoryId =
   | "ocean"
   | "stream"
   | "night"
-  | "thunder";
+  | "thunder"
+  | "drive";
 
 export type Category = {
   id: CategoryId;
@@ -110,7 +112,7 @@ export function enrichCatalog(raw: {
   const files: CatalogFile[] = raw.files.map((f) => ({
     ...f,
     url: "/sounds/" + f.path.split("/").map(encodeURIComponent).join("/"),
-    standalone_scene: f.id === "quietnight",
+    standalone_scene: f.id === "quietnight" || f.id === "drive",
     playback: STREAM_IDS.has(f.id) || f.bytes >= STREAM_BYTES ? "stream" : "buffer",
   }));
 
@@ -123,6 +125,15 @@ export function enrichCatalog(raw: {
       description_zh: "长时长独立场景，不是夜晚变体",
       effect: "fireflies",
       sort: 7.5,
+    },
+    {
+      id: "drive",
+      file_id: "drive",
+      label_zh: "醒律",
+      label_en: "Drive",
+      description_zh: "贝斯、吉他与鼓点，用来点起能量的独立场景",
+      effect: "pulse",
+      sort: 9,
     },
   ];
 

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import type { Mix } from "../../shared/mixSchema";
+import type { Catalog } from "../../shared/catalog";
+import type { Mix, MixTrack } from "../../shared/mixSchema";
 import { fetchMix, fetchPoetry } from "../api/client";
 import { engine, type EngineSnapshot } from "../audio/MixEngine";
-import { matchBackground, tagsFromPlay } from "../backgrounds/match";
+import { effectsFromTags, matchBackground, tagsFromPlay } from "../backgrounds/match";
 import { EffectCompositor, LIGHT } from "../effects/compositor";
 import { attachRainGlass, detachRainGlass, type RainGlass } from "../effects/RainGlass";
 import { WaterRipple } from "../effects/WaterRipple";
@@ -16,6 +17,8 @@ import { useVerseCycle } from "../poetry/useVerseCycle";
 import type { Quote } from "../poetry/types";
 import type { PlayNavState } from "../play/nav";
 import { isReloadNavigation, readPlaySession, writePlaySession } from "../play/session";
+
+const EMPTY_TAGS: string[] = [];
 
 export function PlayPage() {
   const nav = useNavigate();
@@ -43,9 +46,7 @@ export function PlayPage() {
     const n = Number(localStorage.getItem("voicestream_verse_dwell"));
     return Number.isFinite(n) && n >= 6 && n <= 60 ? n : 16;
   });
-  const [playSession, setPlaySession] = useState(0);
   const [about, setAbout] = useState(false);
-  const prevStatus = useRef(snap.status);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glassSlotRef = useRef<HTMLDivElement>(null);
   const waterCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -86,15 +87,8 @@ export function PlayPage() {
   }, []);
 
   useEffect(() => {
-    if (prevStatus.current === "idle" && snap.status === "playing") {
-      setPlaySession((n) => n + 1);
-    }
-    prevStatus.current = snap.status;
-  }, [snap.status]);
-
-  useEffect(() => {
     if (navState.mix) {
-      setMix(navState.mix);
+      setMix((prev) => (prev?.id === navState.mix!.id ? prev : navState.mix!));
       return;
     }
     if (!catalog) return;
@@ -103,19 +97,31 @@ export function PlayPage() {
       try {
         if (params.mixId) {
           const m = await fetchMix(params.mixId);
-          if (!cancelled) setMix(m);
+          if (!cancelled) setMix((prev) => (prev?.id === m.id ? prev : m));
           return;
         }
         if (params.fileId) {
           const f = catalog.files.find((x) => x.id === params.fileId);
           if (!f) throw new Error("没有这个文件");
-          if (!cancelled) setMix(ephemeralFileMix(f));
+          if (!cancelled) {
+            setMix((prev) =>
+              prev?.tracks.length === 1 && prev.tracks[0]?.kind === "file" && prev.tracks[0].target_id === f.id
+                ? prev
+                : ephemeralFileMix(f),
+            );
+          }
           return;
         }
         if (params.categoryId) {
           const c = catalog.categories.find((x) => x.id === params.categoryId);
           if (!c) throw new Error("没有这个类别");
-          if (!cancelled) setMix(ephemeralCategoryMix(c));
+          if (!cancelled) {
+            setMix((prev) =>
+              prev?.tracks.length === 1 && prev.tracks[0]?.kind === "category" && prev.tracks[0].target_id === c.id
+                ? prev
+                : ephemeralCategoryMix(c),
+            );
+          }
         }
       } catch (e) {
         if (!cancelled) setErr(e instanceof Error ? e.message : "无法载入");
@@ -126,49 +132,51 @@ export function PlayPage() {
     };
   }, [catalog, params.mixId, params.fileId, params.categoryId, navState.mix]);
 
-  const momentTags = navState.momentTags ?? [];
+  const momentTags = navState.momentTags ?? EMPTY_TAGS;
+
+  const playHint = useMemo(() => {
+    if (!mix) return { fileIds: [] as string[], categoryIds: [] as string[], tags: [] as string[] };
+    const fileIds = mix.tracks.filter((t) => t.kind === "file").map((t) => t.target_id);
+    const categoryIds = mix.tracks.filter((t) => t.kind === "category").map((t) => t.target_id);
+    const tags = backgrounds
+      ? tagsFromPlay(
+          {
+            fileIds,
+            categoryIds,
+            sceneIds: [
+              ...(fileIds.includes("quietnight") ? ["quietnight"] : []),
+              ...(fileIds.includes("drive") ? ["drive"] : []),
+            ],
+            extra: momentTags,
+          },
+          backgrounds,
+        )
+      : [];
+    return { fileIds, categoryIds, tags };
+  }, [mix, backgrounds, momentTags]);
 
   const bg = useMemo(() => {
     if (!mix || !backgrounds) return null;
-    const fileIds = mix.tracks.filter((t) => t.kind === "file").map((t) => t.target_id);
-    const categoryIds = mix.tracks.filter((t) => t.kind === "category").map((t) => t.target_id);
-    const tags = tagsFromPlay(
-      {
-        fileIds,
-        categoryIds,
-        sceneIds: fileIds.includes("quietnight") ? ["quietnight"] : [],
-        extra: momentTags,
-      },
-      backgrounds,
-    );
-    return matchBackground(tags, backgrounds);
-  }, [mix, backgrounds, momentTags]);
+    return matchBackground(playHint.tags, backgrounds, {
+      fileIds: playHint.fileIds,
+      categoryIds: playHint.categoryIds,
+      seed: mix.id,
+    });
+  }, [mix, backgrounds, playHint]);
 
   const playTags = useMemo(() => {
-    if (!mix || !backgrounds) return [];
-    const fileIds = mix.tracks.filter((t) => t.kind === "file").map((t) => t.target_id);
-    const categoryIds = mix.tracks.filter((t) => t.kind === "category").map((t) => t.target_id);
-    const tags = tagsFromPlay(
-      {
-        fileIds,
-        categoryIds,
-        sceneIds: fileIds.includes("quietnight") ? ["quietnight"] : [],
-        extra: momentTags,
-      },
-      backgrounds,
-    );
+    const tags = [...playHint.tags];
     if (bg) tags.push(...bg.tags);
     return [...new Set(tags)];
-  }, [mix, backgrounds, bg, momentTags]);
+  }, [playHint, bg]);
 
-  const verse = useVerseCycle(
-    quotes,
-    soundMap,
-    playTags,
-    true,
-    dwellSec,
-    `${mix?.id ?? ""}:${playSession}`,
+  const playEffects = useMemo(
+    () => effectsFromTags(playHint.tags, bg?.effects ?? []),
+    [playHint, bg],
   );
+  const fxKey = playEffects.join("|");
+
+  const verse = useVerseCycle(quotes, soundMap, playTags, true, dwellSec, mix?.id ?? "");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -200,39 +208,45 @@ export function PlayPage() {
   }, []);
 
   useEffect(() => {
-    const effects = bg?.effects ?? [];
-    const glass = effects.includes("raindrops");
+    const effects = playEffects;
+    const url = bg ? `/backgrounds/${bg.file}` : null;
+    const wantGlass = effects.includes("raindrops");
+    const wantWater = effects.includes("ripples") && !wantGlass;
+    const storm = effects.includes("lightning");
     let cancelled = false;
-    const timer = window.setTimeout(() => {
-      void (async () => {
-        if (cancelled) return;
-        const rain = rainRef.current;
-        const water = waterRef.current;
-        const url = bg ? `/backgrounds/${bg.file}` : null;
-        const wantWater = effects.includes("ripples") && !glass;
-        const glassOk = glass && url
-          ? Boolean(await rain?.setScene(url, effects.includes("lightning") ? "storm" : "rain"))
-          : false;
-        if (cancelled) return;
-        if (!glassOk) await rain?.setScene(null);
-        const waterOk = wantWater && url ? Boolean(await water?.setScene(url)) : false;
-        if (cancelled) return;
-        if (!waterOk) await water?.setScene(null);
-        if (cancelled) return;
-        fxRef.current?.setEffects(
-          effects.filter((e) => {
-            if (e === "raindrops" && glassOk) return false;
-            if (e === "ripples" && waterOk) return false;
-            return true;
-          }),
-        );
-      })();
-    }, 80);
+
+    const apply2d = (glassOk: boolean, waterOk: boolean) => {
+      if (cancelled) return;
+      fxRef.current?.resize();
+      fxRef.current?.setEffects(
+        effects.filter((e) => {
+          if (e === "raindrops" && glassOk) return false;
+          if (e === "ripples" && waterOk) return false;
+          return true;
+        }),
+      );
+    };
+
+    apply2d(false, false);
+
+    void (async () => {
+      const rain = rainRef.current;
+      const water = waterRef.current;
+      const glassOk = wantGlass && url ? Boolean(await rain?.setScene(url, storm ? "storm" : "rain")) : false;
+      if (cancelled) return;
+      if (!wantGlass || !glassOk) await rain?.setScene(null);
+      if (cancelled) return;
+      const waterOk = wantWater && url ? Boolean(await water?.setScene(url)) : false;
+      if (cancelled) return;
+      if (!wantWater || !waterOk) await water?.setScene(null);
+      if (cancelled) return;
+      apply2d(glassOk, waterOk);
+    })();
+
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
     };
-  }, [bg]);
+  }, [bg, fxKey, playEffects]);
 
   useEffect(() => {
     let raf = 0;
@@ -285,6 +299,7 @@ export function PlayPage() {
 
   const light = LIGHT[bg?.light ?? ""] ?? ["50%", "60%", "rgba(255,255,255,.2)"];
   const hasCategory = mix?.tracks.some((t) => t.kind === "category") ?? false;
+  const nowRows = useMemo(() => mixRows(mix, snap, catalog), [mix, snap, catalog]);
   const hours = Math.floor(snap.sessionSec / 3600);
   const mins = Math.floor((snap.sessionSec % 3600) / 60);
   const secs = Math.floor(snap.sessionSec % 60);
@@ -335,7 +350,7 @@ export function PlayPage() {
       <div className="stage" aria-hidden>
         <div className="bg-wrap">
           <div
-            className={"bg" + (bg?.effects?.includes("grain") ? " grain" : "")}
+            className={"bg" + (playEffects.includes("grain") ? " grain" : "")}
             ref={bgRef}
             style={{ backgroundImage: bg ? `url(/backgrounds/${bg.file})` : undefined }}
           />
@@ -350,15 +365,22 @@ export function PlayPage() {
         <div className="vignette" />
       </div>
       {verse.quote && (
-        <VerseCard quote={verse.quote} pose={verse.pose} leaving={verse.leaving} layout={verse.layout} />
+        <VerseCard
+          key={`${verse.quote.id}:${verse.layout}:${verse.pose.topPct}`}
+          quote={verse.quote}
+          pose={verse.pose}
+          leaving={verse.leaving}
+          layout={verse.layout}
+        />
       )}
+      <div className="hud">
       <header>
         <button type="button" onClick={() => { void engine.stop(250); nav("/"); }}>← 曲库</button>
         <b>{mix?.name ?? "…"}</b>
         <span>{bg?.label_zh}</span>
       </header>
       <div className="now">
-        {snap.current.map((c) => (
+        {nowRows.map((c) => (
           <div key={c.trackId}>
             <em>{c.label}{c.muted ? " · 静音" : ""}</em>
             <i style={{ transform: `scaleX(${Math.max(0.02, c.progress)})` }} />
@@ -433,17 +455,54 @@ export function PlayPage() {
           <b>{formatPct(snap.master)}</b>
         </label>
       </div>
+      </div>
       {about && <AboutModal tone="play" onClose={() => setAbout(false)} />}
       <style>{playCss}</style>
     </div>
   );
 }
 
+function mixRows(mix: Mix | null, snap: EngineSnapshot, catalog: Catalog | null) {
+  if (snap.current.length > 0) {
+    return snap.current.map((c) => ({
+      trackId: c.trackId,
+      label: c.label,
+      muted: c.muted,
+      progress: c.progress,
+      volume: c.volume,
+    }));
+  }
+  if (!mix) return [];
+  return mix.tracks.map((t) => rowFromTrack(t, undefined, catalog));
+}
+
+function rowFromTrack(
+  t: MixTrack,
+  live: EngineSnapshot["current"][number] | undefined,
+  catalog: Catalog | null,
+) {
+  const fileId = live?.fileId || (t.kind === "file" ? t.target_id : "");
+  const file = fileId ? catalog?.files.find((f) => f.id === fileId) : undefined;
+  const cat = t.kind === "category" ? catalog?.categories.find((x) => x.id === t.target_id) : undefined;
+  return {
+    trackId: t.id,
+    label: live?.label || file?.label_zh || cat?.label_zh || t.target_id,
+    muted: live?.muted ?? t.muted,
+    progress: live?.progress ?? 0,
+    volume: live?.volume ?? t.volume,
+  };
+}
+
 const playCss = `
 .play { position: fixed; inset: 0; overflow: hidden; color: #f4efe6; isolation: isolate; }
 .stage {
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  isolation: isolate;
 }
+.hud {
+  position: absolute; inset: 0; z-index: 40; pointer-events: none;
+}
+.hud header, .hud .now, .hud .dock { pointer-events: auto; }
 .bg-wrap {
   position: absolute; inset: -10%;
   animation: ken 48s ease-in-out infinite alternate;
@@ -481,21 +540,29 @@ const playCss = `
 }
 @keyframes breathe { 0%,100% { opacity: .14 } 50% { opacity: .3 } }
 header {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+  position: absolute; top: 0; left: 0; right: 0; z-index: 31;
   display: flex; align-items: center; gap: 12px;
   padding: 18px 20px; background: linear-gradient(180deg, rgba(0,0,0,.45), transparent);
 }
 header b { letter-spacing: .12em; font-weight: 500; }
 header span { color: rgba(244,239,230,.5); font-size: 12px; margin-left: auto; }
-.now { position: absolute; top: 64px; right: 22px; z-index: 10; width: min(300px, 42vw); }
+.now {
+  position: absolute; top: 64px; right: 22px; z-index: 50;
+  width: min(300px, 42vw);
+  transform: translateZ(0);
+}
 .now div { margin-bottom: 12px; }
-.now em { display: block; font-style: normal; font-size: 11px; color: rgba(244,239,230,.55); margin-bottom: 3px; }
-.now i { display: block; height: 2px; width: 100%; background: #fff; transform-origin: left; opacity: .7; }
+.now em {
+  display: block; font-style: normal; font-size: 11px;
+  color: rgba(244,239,230,.82); margin-bottom: 3px;
+  text-shadow: 0 1px 10px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.9);
+}
+.now i { display: block; height: 2px; width: 100%; background: #fff; transform-origin: left; opacity: .85; }
 .tvol { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .tvol input { flex: 1; }
 .tvol b, .vol b { font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 500; min-width: 2.8em; text-align: right; }
 .dock {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 10;
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 31;
   padding: 18px 24px 28px;
   display: grid; justify-items: center; gap: 10px;
   background: linear-gradient(0deg, rgba(0,0,0,.55), transparent);
@@ -515,7 +582,7 @@ header span { color: rgba(244,239,230,.5); font-size: 12px; margin-left: auto; }
 .err { color: #ffb4a2; font-size: 12px; }
 .verse {
   position: absolute;
-  z-index: 11;
+  z-index: 8;
   margin: 0;
   pointer-events: none;
   color: rgba(252, 247, 236, 0.92);
@@ -523,6 +590,7 @@ header span { color: rgba(244,239,230,.5); font-size: 12px; margin-left: auto; }
   font-family: "Songti TC", "Kaiti TC", "STKaiti", "Songti SC", "Kaiti SC", "Source Han Serif TC", "Noto Serif TC", serif;
   transition: opacity 0.9s ease;
   max-height: 52vh;
+  max-width: min(42vw, 420px);
 }
 .verse.leaving { opacity: 0; }
 .verse .el {

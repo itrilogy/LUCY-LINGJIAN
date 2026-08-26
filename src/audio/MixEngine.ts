@@ -421,6 +421,7 @@ export class MixEngine {
       kicks.push(p.kick());
     }
     if (this.players.size === 0) throw new Error("没有轨道能够开始播放");
+    this.emit();
     const outcomes = await Promise.all(kicks);
     this.pausedAccum = sessionCarry;
     const audible = outcomes.some((o) => o === "ok" || o === "pending");

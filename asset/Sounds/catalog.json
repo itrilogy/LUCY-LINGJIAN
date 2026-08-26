@@ -2,8 +2,8 @@
   "version": 1,
   "source": "macOS Comfort Sounds + supplemental thunder recordings",
   "root": "asset/Sounds",
-  "file_count": 87,
-  "total_bytes": 531798981,
+  "file_count": 88,
+  "total_bytes": 533492386,
   "categories": [
     {
       "id": "noise",
@@ -68,6 +68,14 @@
       "description_zh": "网络下载补充雷雨音效",
       "effect": "lightning",
       "sort": 8
+    },
+    {
+      "id": "drive",
+      "label_zh": "醒律 / 能量",
+      "label_en": "Drive",
+      "description_zh": "节奏型独立场景：贝斯、吉他、鼓点，用来点起能量",
+      "effect": "pulse",
+      "sort": 9
     }
   ],
   "files": [
@@ -1036,6 +1044,20 @@
       "duration_sec": 42.8,
       "license": "CC0",
       "source": "BigSoundBank"
+    },
+    {
+      "id": "drive",
+      "filename": "Drive.mp3",
+      "path": "drive/Drive.mp3",
+      "category": "drive",
+      "label_zh": "醒律（贝斯、吉他与鼓点）",
+      "label_en": "Drive",
+      "format": "mp3",
+      "bytes": 1693405,
+      "variant_group": null,
+      "duration_sec": 106,
+      "license": "personal",
+      "source": "local sample"
     }
   ]
 }

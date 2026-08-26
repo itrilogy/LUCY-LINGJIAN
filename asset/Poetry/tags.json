@@ -57,7 +57,8 @@
         { "id": "wind", "label": "風", "aliases": ["松風", "秋風"] },
         { "id": "boat", "label": "舟楫", "aliases": ["漁舟", "孤舟"] },
         { "id": "train", "label": "行旅車馬", "aliases": ["驛", "車"] },
-        { "id": "airplane", "label": "高處／雲行", "aliases": ["雲", "高樓"] }
+        { "id": "airplane", "label": "高處／雲行", "aliases": ["雲", "高樓"] },
+        { "id": "drive", "label": "醒律／節奏", "aliases": ["鼓", "弦", "躍"] }
       ]
     },
     "time": {
@@ -161,6 +162,7 @@
     "boat": ["boat", "boat-place", "river", "solitude", "boat-img"],
     "bus": ["travel", "city", "night-time"],
     "train": ["train", "travel", "longing", "inn"],
+    "drive": ["drive", "fire", "warmth", "awe", "wine"],
     "dawn": ["dawn", "stream", "ease"],
     "dusk": ["dusk", "fire", "warmth", "melancholy"],
     "midnight": ["midnight", "night-time", "still", "solitude"],
