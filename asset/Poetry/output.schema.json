@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "voicestream-poetry-quotes",
+  "title": "VoiceStream 金句产出",
+  "type": "object",
+  "required": ["version", "script", "quotes"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "script": { "type": "string", "const": "zh-Hant" },
+    "quotes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/quote" }
+    }
+  },
+  "$defs": {
+    "quote": {
+      "type": "object",
+      "required": ["id", "source_ref", "title", "author", "lines", "tags", "layout", "seats"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)+$",
+          "description": "稳定 ASCII id，如 li-bai-jing-ye-si"
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "诗词全集内可回溯定位"
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "author": { "type": "string", "minLength": 1 },
+        "dynasty": { "type": "string" },
+        "form": { "type": "string" },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "tags": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string" },
+          "description": "必须是 label_schema.json tags[].id"
+        },
+        "layout": { "enum": ["vertical", "horizontal"] },
+        "weight": { "type": "number", "minimum": 0, "maximum": 2 },
+        "seats": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "必须是 label_schema.json play_seats[].id"
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

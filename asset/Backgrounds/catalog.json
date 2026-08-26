@@ -1,0 +1,306 @@
+{
+  "version": 1,
+  "root": "asset/Backgrounds",
+  "matching": {
+    "hit_weight": 3,
+    "extra_penalty": 0.4,
+    "missing_penalty": 0.2,
+    "subset_bonus": 1.5,
+    "fallback_id": "noise-white"
+  },
+  "defaults": {
+    "noise": "noise-white",
+    "white": "noise-white",
+    "pink": "noise-pink",
+    "brown": "noise-brown",
+    "babble": "noise-babble",
+    "traffic": "traffic-airplane",
+    "airplane": "traffic-airplane",
+    "boat": "traffic-boat",
+    "bus": "traffic-bus",
+    "train": "traffic-train",
+    "fire": "fire-campfire",
+    "rain": "rain-window",
+    "rainonroof": "rain-roof",
+    "ocean": "ocean-shore",
+    "stream": "stream-creek",
+    "steam": "stream-steam",
+    "night": "night-forest",
+    "quietnight": "night-quiet",
+    "thunder": "thunder-field"
+  },
+  "tag_vocabulary": {
+    "categories": ["noise", "traffic", "fire", "rain", "ocean", "stream", "night", "thunder"],
+    "files": [
+      "white", "pink", "brown", "babble",
+      "airplane", "boat", "bus", "train",
+      "rainonroof", "steam", "quietnight"
+    ],
+    "moods": ["indoor", "outdoor", "urban", "nature", "storm", "warm", "cool"]
+  },
+  "file_tags": {
+    "whitenoise": ["noise", "white"],
+    "pinknoise": ["noise", "pink"],
+    "brownnoise": ["noise", "brown"],
+    "babble": ["noise", "babble"],
+    "airplane": ["traffic", "airplane"],
+    "boat": ["traffic", "boat"],
+    "bus": ["traffic", "bus"],
+    "train": ["traffic", "train"],
+    "rainonroof": ["rain", "rainonroof"],
+    "steam": ["stream", "steam"],
+    "quietnight": ["quietnight", "night"]
+  },
+  "category_tags": {
+    "noise": ["noise"],
+    "traffic": ["traffic"],
+    "fire": ["fire"],
+    "rain": ["rain"],
+    "ocean": ["ocean"],
+    "stream": ["stream"],
+    "night": ["night"],
+    "thunder": ["thunder", "rain"]
+  },
+  "images": [
+    {
+      "id": "noise-white",
+      "file": "noise-white.jpg",
+      "label_zh": "白雾",
+      "tags": ["noise", "white"],
+      "effects": ["grain"],
+      "light": "cool-fog"
+    },
+    {
+      "id": "noise-pink",
+      "file": "noise-pink.jpg",
+      "label_zh": "粉尘录音室",
+      "tags": ["noise", "pink"],
+      "effects": ["grain"],
+      "light": "warm-shaft"
+    },
+    {
+      "id": "noise-brown",
+      "file": "noise-brown.jpg",
+      "label_zh": "地窖",
+      "tags": ["noise", "brown"],
+      "effects": ["grain"],
+      "light": "amber-dust"
+    },
+    {
+      "id": "noise-babble",
+      "file": "noise-babble.jpg",
+      "label_zh": "咖啡馆",
+      "tags": ["noise", "babble"],
+      "effects": ["grain"],
+      "light": "warm-interior"
+    },
+    {
+      "id": "traffic-airplane",
+      "file": "traffic-airplane.jpg",
+      "label_zh": "机舱夜窗",
+      "tags": ["traffic", "airplane"],
+      "effects": ["parallax"],
+      "light": "cabin-window"
+    },
+    {
+      "id": "traffic-boat",
+      "file": "traffic-boat.jpg",
+      "label_zh": "船头黄昏",
+      "tags": ["traffic", "boat"],
+      "effects": ["parallax", "waves"],
+      "light": "lantern"
+    },
+    {
+      "id": "traffic-bus",
+      "file": "traffic-bus.jpg",
+      "label_zh": "夜巴士",
+      "tags": ["traffic", "bus"],
+      "effects": ["parallax"],
+      "light": "street-streak"
+    },
+    {
+      "id": "traffic-train",
+      "file": "traffic-train.jpg",
+      "label_zh": "火车窗",
+      "tags": ["traffic", "train"],
+      "effects": ["parallax", "raindrops"],
+      "light": "glass-bokeh"
+    },
+    {
+      "id": "fire-campfire",
+      "file": "fire-campfire.jpg",
+      "label_zh": "林中篝火",
+      "tags": ["fire"],
+      "effects": ["embers"],
+      "light": "fire-pulse"
+    },
+    {
+      "id": "fire-hearth",
+      "file": "fire-hearth.jpg",
+      "label_zh": "壁炉",
+      "tags": ["fire"],
+      "effects": ["embers"],
+      "light": "hearth-glow"
+    },
+    {
+      "id": "rain-window",
+      "file": "rain-window.jpg",
+      "label_zh": "雨夜窗",
+      "tags": ["rain"],
+      "effects": ["raindrops"],
+      "light": "city-streak"
+    },
+    {
+      "id": "rain-forest",
+      "file": "rain-forest.jpg",
+      "label_zh": "林中雨",
+      "tags": ["rain"],
+      "effects": ["raindrops"],
+      "light": "canopy-shaft"
+    },
+    {
+      "id": "rain-roof",
+      "file": "rain-roof.jpg",
+      "label_zh": "屋顶雨",
+      "tags": ["rain", "rainonroof"],
+      "effects": ["raindrops"],
+      "light": "overcast"
+    },
+    {
+      "id": "ocean-shore",
+      "file": "ocean-shore.jpg",
+      "label_zh": "岸边浪",
+      "tags": ["ocean"],
+      "effects": ["waves"],
+      "light": "horizon-wash"
+    },
+    {
+      "id": "ocean-night",
+      "file": "ocean-night.jpg",
+      "label_zh": "月下海",
+      "tags": ["ocean", "night"],
+      "effects": ["waves", "fireflies"],
+      "light": "moon-path"
+    },
+    {
+      "id": "stream-creek",
+      "file": "stream-creek.jpg",
+      "label_zh": "苔溪",
+      "tags": ["stream"],
+      "effects": ["ripples"],
+      "light": "leaf-caustic"
+    },
+    {
+      "id": "stream-steam",
+      "file": "stream-steam.jpg",
+      "label_zh": "蒸汽汤屋",
+      "tags": ["stream", "steam"],
+      "effects": ["ripples"],
+      "light": "lantern-steam"
+    },
+    {
+      "id": "night-forest",
+      "file": "night-forest.jpg",
+      "label_zh": "萤火林",
+      "tags": ["night"],
+      "effects": ["fireflies"],
+      "light": "firefly-pulse"
+    },
+    {
+      "id": "night-quiet",
+      "file": "night-quiet.jpg",
+      "label_zh": "安静的夜晚",
+      "tags": ["quietnight", "night"],
+      "effects": ["fireflies"],
+      "light": "moon-curtain"
+    },
+    {
+      "id": "thunder-field",
+      "file": "thunder-field.jpg",
+      "label_zh": "原野雷雨",
+      "tags": ["thunder", "rain"],
+      "effects": ["lightning", "raindrops"],
+      "light": "storm-flash"
+    },
+    {
+      "id": "thunder-urban",
+      "file": "thunder-urban.jpg",
+      "label_zh": "城市雷暴",
+      "tags": ["thunder", "rain", "night"],
+      "effects": ["lightning", "raindrops"],
+      "light": "storm-flash"
+    },
+    {
+      "id": "thunder-close",
+      "file": "thunder-close.jpg",
+      "label_zh": "近距雷暴",
+      "tags": ["thunder", "rain"],
+      "effects": ["lightning", "raindrops"],
+      "light": "storm-flash"
+    },
+    {
+      "id": "mix-rain-fire",
+      "file": "mix-rain-fire.jpg",
+      "label_zh": "雨夜壁炉",
+      "tags": ["rain", "fire"],
+      "effects": ["embers", "raindrops"],
+      "light": "split-warm-cool"
+    },
+    {
+      "id": "mix-rain-night",
+      "file": "mix-rain-night.jpg",
+      "label_zh": "小镇夜雨",
+      "tags": ["rain", "night"],
+      "effects": ["raindrops", "fireflies"],
+      "light": "window-lamp"
+    },
+    {
+      "id": "mix-ocean-rain",
+      "file": "mix-ocean-rain.jpg",
+      "label_zh": "海边雨",
+      "tags": ["ocean", "rain"],
+      "effects": ["waves", "raindrops"],
+      "light": "overcast"
+    },
+    {
+      "id": "mix-ocean-fire",
+      "file": "mix-ocean-fire.jpg",
+      "label_zh": "海滩篝火",
+      "tags": ["ocean", "fire"],
+      "effects": ["embers", "waves"],
+      "light": "fire-pulse"
+    },
+    {
+      "id": "mix-stream-rain",
+      "file": "mix-stream-rain.jpg",
+      "label_zh": "雨中溪",
+      "tags": ["stream", "rain"],
+      "effects": ["ripples", "raindrops"],
+      "light": "canopy-shaft"
+    },
+    {
+      "id": "mix-quiet-rain",
+      "file": "mix-quiet-rain.jpg",
+      "label_zh": "静夜听雨",
+      "tags": ["quietnight", "rain", "night"],
+      "effects": ["raindrops", "fireflies"],
+      "light": "moon-curtain"
+    },
+    {
+      "id": "mix-stream-night",
+      "file": "mix-stream-night.jpg",
+      "label_zh": "月下溪",
+      "tags": ["stream", "night"],
+      "effects": ["ripples", "fireflies"],
+      "light": "moon-path"
+    },
+    {
+      "id": "mix-airplane-thunder",
+      "file": "mix-airplane-thunder.jpg",
+      "label_zh": "云中雷",
+      "tags": ["traffic", "airplane", "thunder"],
+      "effects": ["parallax", "lightning"],
+      "light": "cabin-window"
+    }
+  ]
+}

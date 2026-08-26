@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="聆涧 · LingJian">
+  <!--
+    聆涧方标 512（鹿溪产品标四层）
+    1 鹿溪绿圆角底 rx=112
+    2 业务：涧壁 + 聆之开合弧
+    3 溪流 #00D2FF
+    4 源启星 + 标题金水珠
+  -->
+  <defs>
+    <linearGradient id="lj-plate" x1="80" y1="40" x2="440" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#127A55"/>
+      <stop offset="100%" stop-color="#0D5E42"/>
+    </linearGradient>
+    <linearGradient id="lj-water" x1="256" y1="110" x2="256" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7CF0FF" stop-opacity="0.25"/>
+      <stop offset="40%" stop-color="#00D2FF" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#00D2FF" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#lj-plate)"/>
+  <circle cx="150" cy="128" r="108" fill="#ffffff" opacity="0.06"/>
+
+  <path d="M148 152 L214 420" fill="none" stroke="#F5F7FA" stroke-width="22" stroke-linecap="round"/>
+  <path d="M364 156 L298 420" fill="none" stroke="#F5F7FA" stroke-width="22" stroke-linecap="round" opacity="0.88"/>
+
+  <path d="M176 138 C214 96, 298 96, 338 142" fill="none" stroke="#F5F7FA" stroke-width="24" stroke-linecap="round"/>
+  <path d="M208 168 C230 146, 282 146, 306 170" fill="none" stroke="#F5F7FA" stroke-width="16" stroke-linecap="round" opacity="0.72"/>
+
+  <path d="M256 148 C232 214, 284 258, 248 328 C228 378, 272 404, 258 438"
+        fill="none" stroke="url(#lj-water)" stroke-width="22" stroke-linecap="round"/>
+
+  <circle cx="252" cy="336" r="18" fill="#F1C40F"/>
+  <circle cx="246" cy="330" r="5" fill="#F5F7FA" opacity="0.85"/>
+
+  <g transform="translate(392 118)">
+    <path d="M0-34 L7.2-7.2 L34 0 L7.2 7.2 L0 34 L-7.2 7.2 L-34 0 L-7.2-7.2 Z" fill="#00D2FF"/>
+    <circle cx="0" cy="0" r="7" fill="#F5F7FA"/>
+  </g>
+</svg>

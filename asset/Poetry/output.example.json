@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "script": "zh-Hant",
+  "quotes": [
+    {
+      "id": "li-bai-jing-ye-si",
+      "source_ref": "REPLACE_WITH_CORPUS_ID",
+      "title": "靜夜思",
+      "author": "李白",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["牀前明月光", "疑是地上霜"],
+      "tags": [
+        "quietnight",
+        "night-time",
+        "moon",
+        "room",
+        "solitude",
+        "still",
+        "layout-vertical"
+      ],
+      "layout": "vertical",
+      "weight": 1.2,
+      "seats": ["quietnight", "night"],
+      "notes": "室内枕边静夜，入独立场景静夜；勿标 forest。"
+    },
+    {
+      "id": "du-fu-chun-ye-xi-yu",
+      "source_ref": "REPLACE_WITH_CORPUS_ID",
+      "title": "春夜喜雨",
+      "author": "杜甫",
+      "dynasty": "唐",
+      "form": "五言律",
+      "lines": ["隨風潛入夜", "潤物細無聲"],
+      "tags": ["rain", "night-time", "spring", "still", "rain-img", "layout-vertical"],
+      "layout": "vertical",
+      "weight": 1.2,
+      "seats": ["rain", "mix-rain-night"],
+      "notes": "细雨不是 thunder。"
+    }
+  ]
+}

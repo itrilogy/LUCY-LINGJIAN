@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "01JZG000000000000000000002",
+  "name": "雨夜",
+  "created_at": "2026-08-25T12:00:00.000Z",
+  "updated_at": "2026-08-25T12:00:00.000Z",
+  "master_volume": 0.8,
+  "tracks": [
+    {
+      "id": "01JZG00000000000000000TRK2",
+      "kind": "category",
+      "target_id": "rain",
+      "volume": 0.7,
+      "muted": false,
+      "fade_in_ms": 2500,
+      "fade_out_ms": 2500,
+      "loop": true
+    },
+    {
+      "id": "01JZG00000000000000000TRK3",
+      "kind": "category",
+      "target_id": "night",
+      "volume": 0.45,
+      "muted": false,
+      "fade_in_ms": 4000,
+      "fade_out_ms": 4000,
+      "loop": true
+    }
+  ],
+  "shuffle": { "avoid_last_n": 1 }
+}

@@ -1,0 +1,28 @@
+:root {
+  --bg: #0b0c0e;
+  --fg: #f3eee6;
+  --muted: rgba(243, 238, 230, 0.55);
+  --line: rgba(243, 238, 230, 0.14);
+  --accent: #e8d4b0;
+  --luxi-green: #0D5E42;
+  --luxi-cyan: #00D2FF;
+  --luxi-gold: #F1C40F;
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+body {
+  font: 14px/1.45 "Songti SC", "Source Han Serif SC", "Noto Serif SC", Georgia, serif;
+}
+button, input { font: inherit; color: inherit; }
+button {
+  appearance: none;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+button:hover { background: rgba(255,255,255,.12); }
+button:disabled { opacity: .35; cursor: default; }
+button.primary { background: rgba(232, 212, 176, .18); border-color: rgba(232,212,176,.4); }
+a { color: inherit; text-decoration: none; }

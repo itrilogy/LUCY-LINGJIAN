@@ -1,0 +1,428 @@
+{
+  "version": 1,
+  "script": "zh-Hant",
+  "source": "seed — 古典詩詞公開領域名句，供標籤命中試跑與人工提煉。lines 僅一兩句，不作全詩。",
+  "quotes": [
+    {
+      "id": "li-bai-jing-ye-si",
+      "title": "靜夜思",
+      "author": "李白",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["牀前明月光", "疑是地上霜"],
+      "tags": ["quietnight", "night-time", "moon", "room", "solitude", "still"],
+      "layout": "vertical"
+    },
+    {
+      "id": "wang-wei-niao-ming-jian",
+      "title": "鳥鳴澗",
+      "author": "王維",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["人閒桂花落", "夜靜春山空"],
+      "tags": ["night", "still", "zen", "forest", "spring", "quietnight"],
+      "layout": "vertical"
+    },
+    {
+      "id": "wang-wei-zhu-li-guan",
+      "title": "竹里館",
+      "author": "王維",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["獨坐幽篁裏", "彈琴復長嘯"],
+      "tags": ["solitude", "bamboo", "forest", "still", "zen", "night-time"],
+      "layout": "vertical"
+    },
+    {
+      "id": "wang-wei-lu-chai",
+      "title": "鹿柴",
+      "author": "王維",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["空山不見人", "但聞人語響"],
+      "tags": ["forest", "still", "zen", "babble", "solitude", "stream"],
+      "layout": "vertical"
+    },
+    {
+      "id": "wang-wei-shan-ju-qiu-ming",
+      "title": "山居秋暝",
+      "author": "王維",
+      "dynasty": "唐",
+      "form": "五言律",
+      "lines": ["空山新雨後", "天氣晚來秋"],
+      "tags": ["rain", "autumn", "forest", "mountain", "dusk", "stream"],
+      "layout": "vertical"
+    },
+    {
+      "id": "du-fu-chun-ye-xi-yu",
+      "title": "春夜喜雨",
+      "author": "杜甫",
+      "dynasty": "唐",
+      "form": "五言律",
+      "lines": ["隨風潛入夜", "潤物細無聲"],
+      "tags": ["rain", "night-time", "spring", "still", "rain-img"],
+      "layout": "vertical"
+    },
+    {
+      "id": "du-fu-mao-wu",
+      "title": "茅屋為秋風所破歌",
+      "author": "杜甫",
+      "dynasty": "唐",
+      "form": "古風",
+      "lines": ["牀頭屋漏無乾處", "雨腳如麻未斷絕"],
+      "tags": ["rain", "rainonroof", "roof", "autumn", "storm"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "li-shangyin-ye-yu-ji-bei",
+      "title": "夜雨寄北",
+      "author": "李商隱",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["何當共剪西窗燭", "卻話巴山夜雨時"],
+      "tags": ["rain", "night-time", "window", "longing", "lamp", "rain-img"],
+      "layout": "vertical"
+    },
+    {
+      "id": "zhang-ji-feng-qiao",
+      "title": "楓橋夜泊",
+      "author": "張繼",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["月落烏啼霜滿天", "江楓漁火對愁眠"],
+      "tags": ["night-time", "boat", "river", "moon", "fire", "bell", "melancholy", "sleep"],
+      "layout": "vertical"
+    },
+    {
+      "id": "wei-yingwu-chu-zhou",
+      "title": "滁州西澗",
+      "author": "韋應物",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["春潮帶雨晚來急", "野渡無人舟自橫"],
+      "tags": ["rain", "stream", "boat", "dusk", "spring", "solitude", "river"],
+      "layout": "vertical"
+    },
+    {
+      "id": "liu-zongyuan-jiang-xue",
+      "title": "江雪",
+      "author": "柳宗元",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["孤舟蓑笠翁", "獨釣寒江雪"],
+      "tags": ["boat", "solitude", "winter", "snow", "river", "still", "boat-img"],
+      "layout": "vertical"
+    },
+    {
+      "id": "meng-haoran-chun-xiao",
+      "title": "春曉",
+      "author": "孟浩然",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["春眠不覺曉", "處處聞啼鳥"],
+      "tags": ["dawn", "spring", "sleep", "rain", "still"],
+      "layout": "vertical"
+    },
+    {
+      "id": "xu-hun-xianyang",
+      "title": "咸陽城東樓",
+      "author": "許渾",
+      "dynasty": "唐",
+      "form": "七言律",
+      "lines": ["溪雲初起日沉閣", "山雨欲來風滿樓"],
+      "tags": ["thunder", "storm", "rain", "wind", "dusk", "awe"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "lu-you-feng-yu",
+      "title": "十一月四日風雨大作",
+      "author": "陸游",
+      "dynasty": "宋",
+      "form": "七言絕句",
+      "lines": ["夜闌臥聽風吹雨", "鐵馬冰河入夢來"],
+      "tags": ["rain", "storm", "wind", "night-time", "sleep", "awe", "rainonroof"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "du-mu-qingming",
+      "title": "清明",
+      "author": "杜牧",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["清明時節雨紛紛", "路上行人欲斷魂"],
+      "tags": ["rain", "mist", "spring", "travel", "melancholy"],
+      "layout": "vertical"
+    },
+    {
+      "id": "du-mu-bo-qin-huai",
+      "title": "泊秦淮",
+      "author": "杜牧",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["煙籠寒水月籠沙", "夜泊秦淮近酒家"],
+      "tags": ["night-time", "mist", "river", "boat", "moon", "babble", "wine", "inn"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "cao-cao-guan-cang-hai",
+      "title": "觀滄海",
+      "author": "曹操",
+      "dynasty": "漢",
+      "form": "樂府",
+      "lines": ["秋風蕭瑟", "洪波湧起"],
+      "tags": ["ocean", "sea", "vast", "wave", "autumn", "wind", "awe"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "zhang-ruoxu-chun-jiang",
+      "title": "春江花月夜",
+      "author": "張若虛",
+      "dynasty": "唐",
+      "form": "樂府",
+      "lines": ["春江潮水連海平", "海上明月共潮生"],
+      "tags": ["ocean", "moon", "spring", "wave", "vast", "shore", "night-time"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "wang-wan-bei-gu",
+      "title": "次北固山下",
+      "author": "王灣",
+      "dynasty": "唐",
+      "form": "五言律",
+      "lines": ["潮平兩岸闊", "風正一帆懸"],
+      "tags": ["boat", "river", "dawn", "vast", "travel", "boat-img"],
+      "layout": "vertical"
+    },
+    {
+      "id": "zhang-zhihe-yu-ge-zi",
+      "title": "漁歌子",
+      "author": "張志和",
+      "dynasty": "唐",
+      "form": "小令",
+      "lines": ["西塞山前白鷺飛", "桃花流水鱖魚肥"],
+      "tags": ["stream", "river", "spring", "ease", "boat", "shore"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "zhu-xi-guan-shu",
+      "title": "觀書有感",
+      "author": "朱熹",
+      "dynasty": "宋",
+      "form": "七言絕句",
+      "lines": ["半畝方塘一鑑開", "天光雲影共徘徊"],
+      "tags": ["stream", "lake", "still", "zen", "ease", "cloud"],
+      "layout": "vertical"
+    },
+    {
+      "id": "yang-wanli-xiao-chi",
+      "title": "小池",
+      "author": "楊萬里",
+      "dynasty": "宋",
+      "form": "七言絕句",
+      "lines": ["泉眼無聲惜細流", "樹陰照水愛晴柔"],
+      "tags": ["stream", "still", "ease", "summer", "lake"],
+      "layout": "vertical"
+    },
+    {
+      "id": "chang-jian-po-shan",
+      "title": "題破山寺後禪院",
+      "author": "常建",
+      "dynasty": "唐",
+      "form": "五言律",
+      "lines": ["萬籟此都寂", "但餘鐘磬音"],
+      "tags": ["still", "zen", "temple", "bell", "forest", "noise"],
+      "layout": "vertical"
+    },
+    {
+      "id": "su-shi-shui-diao",
+      "title": "水調歌頭",
+      "author": "蘇軾",
+      "dynasty": "宋",
+      "form": "長調",
+      "lines": ["明月幾時有", "把酒問青天"],
+      "tags": ["moon", "night-time", "vast", "wine", "longing", "quietnight"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "li-shangyin-chang-e",
+      "title": "嫦娥",
+      "author": "李商隱",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["雲母屏風燭影深", "長河漸落曉星沉"],
+      "tags": ["quietnight", "lamp", "room", "solitude", "night-time", "still"],
+      "layout": "vertical"
+    },
+    {
+      "id": "jia-dao-xun-yin-zhe",
+      "title": "尋隱者不遇",
+      "author": "賈島",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["松下問童子", "言師採藥去"],
+      "tags": ["pine", "forest", "mountain", "zen", "ease"],
+      "layout": "vertical"
+    },
+    {
+      "id": "bai-juyi-wen-liu",
+      "title": "問劉十九",
+      "author": "白居易",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["綠蟻新醅酒", "紅泥小火爐"],
+      "tags": ["fire", "warmth", "wine", "room", "winter", "lamp"],
+      "layout": "vertical"
+    },
+    {
+      "id": "du-mu-shan-xing",
+      "title": "山行",
+      "author": "杜牧",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["停車坐愛楓林晚", "霜葉紅於二月花"],
+      "tags": ["autumn", "forest", "dusk", "fire", "travel"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "ma-zhiyuan-tian-jing-sha",
+      "title": "天淨沙·秋思",
+      "author": "馬致遠",
+      "dynasty": "元",
+      "form": "散曲",
+      "lines": ["夕陽西下", "斷腸人在天涯"],
+      "tags": ["dusk", "autumn", "travel", "longing", "melancholy", "train"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "wen-tingyun-shang-shan",
+      "title": "商山早行",
+      "author": "溫庭筠",
+      "dynasty": "唐",
+      "form": "五言律",
+      "lines": ["雞聲茅店月", "人跡板橋霜"],
+      "tags": ["dawn", "travel", "inn", "moon", "train", "winter"],
+      "layout": "vertical"
+    },
+    {
+      "id": "liu-changqing-feng-xue",
+      "title": "逢雪宿芙蓉山主人",
+      "author": "劉長卿",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["日暮蒼山遠", "天寒白屋貧"],
+      "tags": ["dusk", "winter", "roof", "travel", "solitude", "mountain"],
+      "layout": "vertical"
+    },
+    {
+      "id": "wang-changling-fu-rong-lou",
+      "title": "芙蓉樓送辛漸",
+      "author": "王昌齡",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["寒雨連江夜入吳", "平明送客楚山孤"],
+      "tags": ["rain", "night-time", "river", "travel", "solitude"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "li-bai-zao-fa-bai-di",
+      "title": "早發白帝城",
+      "author": "李白",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["兩岸猿聲啼不住", "輕舟已過萬重山"],
+      "tags": ["boat", "river", "mountain", "travel", "vast", "airplane"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "liu-yuxi-qiu-ci",
+      "title": "秋詞",
+      "author": "劉禹錫",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["晴空一鶴排雲上", "便引詩情到碧霄"],
+      "tags": ["autumn", "clear", "vast", "cloud", "airplane", "ease"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "cen-shen-feng-ru-jing",
+      "title": "逢入京使",
+      "author": "岑參",
+      "dynasty": "唐",
+      "form": "七言絕句",
+      "lines": ["故園東望路漫漫", "雙袖龍鍾淚不乾"],
+      "tags": ["travel", "longing", "train", "vast"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "na-lan-huan-xi-sha",
+      "title": "浣溪沙",
+      "author": "納蘭性德",
+      "dynasty": "清",
+      "form": "小令",
+      "lines": ["風也蕭蕭", "雨也蕭蕭"],
+      "tags": ["rain", "wind", "night-time", "melancholy", "window"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "li-qingzhao-ru-meng-ling",
+      "title": "如夢令",
+      "author": "李清照",
+      "dynasty": "宋",
+      "form": "小令",
+      "lines": ["昨夜雨疏風驟", "濃睡不消殘酒"],
+      "tags": ["rain", "spring", "still", "window", "rain-img", "sleep"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "bai-juyi-pi-pa-xing",
+      "title": "琵琶行",
+      "author": "白居易",
+      "dynasty": "唐",
+      "form": "古風",
+      "lines": ["東船西舫悄無言", "唯見江心秋月白"],
+      "tags": ["night-time", "river", "moon", "boat", "still", "autumn", "babble"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "liu-zongyuan-yu-weng",
+      "title": "漁翁",
+      "author": "柳宗元",
+      "dynasty": "唐",
+      "form": "古風",
+      "lines": ["煙銷日出不見人", "欸乃一聲山水綠"],
+      "tags": ["boat", "stream", "mist", "dawn", "ease", "zen"],
+      "layout": "horizontal"
+    },
+    {
+      "id": "wang-wei-song-bie",
+      "title": "送別",
+      "author": "王維",
+      "dynasty": "唐",
+      "form": "五言絕句",
+      "lines": ["日暮掩柴扉"],
+      "tags": ["dusk", "roof", "still", "solitude", "forest"],
+      "layout": "vertical",
+      "notes": "單句亦可，播放頁允許 lines.length === 1"
+    },
+    {
+      "id": "tao-yuanming-yin-jiu",
+      "title": "飲酒·其五",
+      "author": "陶淵明",
+      "dynasty": "魏晉",
+      "form": "五言律",
+      "lines": ["採菊東籬下", "悠然見南山"],
+      "tags": ["ease", "still", "zen", "mountain", "dusk"],
+      "layout": "vertical"
+    },
+    {
+      "id": "su-shi-ding-feng-bo",
+      "title": "定風波",
+      "author": "蘇軾",
+      "dynasty": "宋",
+      "form": "小令",
+      "lines": ["竹杖芒鞋輕勝馬", "一蓑煙雨任平生"],
+      "tags": ["rain", "mist", "travel", "ease", "storm"],
+      "layout": "horizontal"
+    }
+  ]
+}

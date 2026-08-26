@@ -1,0 +1,1817 @@
+{
+  "version": 1,
+  "note": "提取模型只准使用 tags[].id。席位对号：金句 tags 与 must_any 求交非空，且与 avoid 无交。",
+  "play_seats": [
+    {
+      "seat_id": "noise",
+      "kind": "category",
+      "voicestream": {
+        "category": "noise"
+      },
+      "must_any": [
+        "noise",
+        "zen",
+        "still"
+      ],
+      "should": [
+        "still",
+        "zen"
+      ],
+      "avoid": [
+        "babble",
+        "thunder",
+        "storm"
+      ]
+    },
+    {
+      "seat_id": "white",
+      "kind": "file",
+      "voicestream": {
+        "file": "whitenoise"
+      },
+      "must_any": [
+        "noise",
+        "still",
+        "vast",
+        "mist"
+      ],
+      "should": [
+        "still",
+        "zen"
+      ],
+      "avoid": [
+        "babble"
+      ]
+    },
+    {
+      "seat_id": "pink",
+      "kind": "file",
+      "voicestream": {
+        "file": "pinknoise"
+      },
+      "must_any": [
+        "noise",
+        "warmth",
+        "room"
+      ],
+      "should": [
+        "still"
+      ],
+      "avoid": [
+        "storm"
+      ]
+    },
+    {
+      "seat_id": "brown",
+      "kind": "file",
+      "voicestream": {
+        "file": "brownnoise"
+      },
+      "must_any": [
+        "noise",
+        "still",
+        "room"
+      ],
+      "should": [
+        "still"
+      ],
+      "avoid": [
+        "babble"
+      ]
+    },
+    {
+      "seat_id": "babble",
+      "kind": "file",
+      "voicestream": {
+        "file": "babble"
+      },
+      "must_any": [
+        "babble",
+        "inn",
+        "city",
+        "wine"
+      ],
+      "should": [
+        "night-time"
+      ],
+      "avoid": [
+        "zen"
+      ]
+    },
+    {
+      "seat_id": "traffic",
+      "kind": "category",
+      "voicestream": {
+        "category": "traffic"
+      },
+      "must_any": [
+        "travel",
+        "train",
+        "boat",
+        "airplane"
+      ],
+      "should": [
+        "longing"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "airplane",
+      "kind": "file",
+      "voicestream": {
+        "file": "airplane"
+      },
+      "must_any": [
+        "airplane",
+        "cloud",
+        "vast",
+        "travel"
+      ],
+      "should": [
+        "vast"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "boat",
+      "kind": "file",
+      "voicestream": {
+        "file": "boat"
+      },
+      "must_any": [
+        "boat",
+        "boat-place",
+        "river",
+        "ocean"
+      ],
+      "should": [
+        "solitude"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "bus",
+      "kind": "file",
+      "voicestream": {
+        "file": "bus"
+      },
+      "must_any": [
+        "travel",
+        "city",
+        "train"
+      ],
+      "should": [
+        "night-time"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "train",
+      "kind": "file",
+      "voicestream": {
+        "file": "train"
+      },
+      "must_any": [
+        "train",
+        "travel",
+        "longing",
+        "inn"
+      ],
+      "should": [
+        "dusk",
+        "night-time"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "fire",
+      "kind": "category",
+      "voicestream": {
+        "category": "fire"
+      },
+      "must_any": [
+        "fire",
+        "lamp",
+        "warmth"
+      ],
+      "should": [
+        "night-time",
+        "room"
+      ],
+      "avoid": [
+        "storm"
+      ]
+    },
+    {
+      "seat_id": "rain",
+      "kind": "category",
+      "voicestream": {
+        "category": "rain"
+      },
+      "must_any": [
+        "rain"
+      ],
+      "should": [
+        "window",
+        "night-time",
+        "mist"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "rainonroof",
+      "kind": "file",
+      "voicestream": {
+        "file": "rainonroof"
+      },
+      "must_any": [
+        "rainonroof",
+        "rain"
+      ],
+      "should": [
+        "roof",
+        "sleep",
+        "night-time"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "ocean",
+      "kind": "category",
+      "voicestream": {
+        "category": "ocean"
+      },
+      "must_any": [
+        "ocean",
+        "sea",
+        "wave"
+      ],
+      "should": [
+        "vast",
+        "moon"
+      ],
+      "avoid": [
+        "stream"
+      ]
+    },
+    {
+      "seat_id": "stream",
+      "kind": "category",
+      "voicestream": {
+        "category": "stream"
+      },
+      "must_any": [
+        "stream",
+        "river"
+      ],
+      "should": [
+        "ease",
+        "zen",
+        "forest"
+      ],
+      "avoid": [
+        "ocean",
+        "sea"
+      ]
+    },
+    {
+      "seat_id": "steam",
+      "kind": "file",
+      "voicestream": {
+        "file": "steam"
+      },
+      "must_any": [
+        "steam",
+        "mist",
+        "warmth"
+      ],
+      "should": [
+        "room"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "night",
+      "kind": "category",
+      "voicestream": {
+        "category": "night"
+      },
+      "must_any": [
+        "night",
+        "night-time"
+      ],
+      "should": [
+        "still",
+        "moon",
+        "solitude",
+        "forest"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "quietnight",
+      "kind": "scene",
+      "voicestream": {
+        "file": "quietnight"
+      },
+      "must_any": [
+        "quietnight",
+        "sleep",
+        "room"
+      ],
+      "should": [
+        "still",
+        "moon",
+        "lamp",
+        "night-time"
+      ],
+      "avoid": [
+        "babble",
+        "storm"
+      ]
+    },
+    {
+      "seat_id": "thunder",
+      "kind": "category",
+      "voicestream": {
+        "category": "thunder"
+      },
+      "must_any": [
+        "thunder",
+        "storm"
+      ],
+      "should": [
+        "rain",
+        "awe",
+        "wind"
+      ],
+      "avoid": [
+        "ease"
+      ]
+    },
+    {
+      "seat_id": "mix-rain-fire",
+      "kind": "mix",
+      "voicestream": {
+        "categories": [
+          "rain",
+          "fire"
+        ]
+      },
+      "must_any": [
+        "rain",
+        "fire"
+      ],
+      "should": [
+        "window",
+        "lamp",
+        "night-time",
+        "warmth"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "mix-rain-night",
+      "kind": "mix",
+      "voicestream": {
+        "categories": [
+          "rain",
+          "night"
+        ]
+      },
+      "must_any": [
+        "rain",
+        "night-time"
+      ],
+      "should": [
+        "window",
+        "melancholy",
+        "still"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "mix-ocean-rain",
+      "kind": "mix",
+      "voicestream": {
+        "categories": [
+          "ocean",
+          "rain"
+        ]
+      },
+      "must_any": [
+        "ocean",
+        "rain"
+      ],
+      "should": [
+        "mist",
+        "shore"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "mix-ocean-fire",
+      "kind": "mix",
+      "voicestream": {
+        "categories": [
+          "ocean",
+          "fire"
+        ]
+      },
+      "must_any": [
+        "ocean",
+        "fire"
+      ],
+      "should": [
+        "night-time",
+        "shore"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "mix-stream-rain",
+      "kind": "mix",
+      "voicestream": {
+        "categories": [
+          "stream",
+          "rain"
+        ]
+      },
+      "must_any": [
+        "stream",
+        "rain"
+      ],
+      "should": [
+        "forest",
+        "mist"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "mix-quiet-rain",
+      "kind": "mix",
+      "voicestream": {
+        "files": [
+          "quietnight"
+        ],
+        "categories": [
+          "rain"
+        ]
+      },
+      "must_any": [
+        "rain",
+        "quietnight"
+      ],
+      "should": [
+        "window",
+        "sleep",
+        "lamp"
+      ],
+      "avoid": [
+        "babble"
+      ]
+    },
+    {
+      "seat_id": "mix-stream-night",
+      "kind": "mix",
+      "voicestream": {
+        "categories": [
+          "stream",
+          "night"
+        ]
+      },
+      "must_any": [
+        "stream",
+        "night-time"
+      ],
+      "should": [
+        "moon",
+        "still",
+        "zen"
+      ],
+      "avoid": []
+    },
+    {
+      "seat_id": "mix-airplane-thunder",
+      "kind": "mix",
+      "voicestream": {
+        "files": [
+          "airplane"
+        ],
+        "categories": [
+          "thunder"
+        ]
+      },
+      "must_any": [
+        "airplane",
+        "thunder",
+        "storm",
+        "cloud"
+      ],
+      "should": [
+        "awe",
+        "vast"
+      ],
+      "avoid": []
+    }
+  ],
+  "tags_by_facet": {
+    "sound": [
+      {
+        "id": "noise",
+        "label_hant": "空響／白噪",
+        "label_hans": "空响／白噪",
+        "definition": "詩境近於無具體物象之聲，或萬籟皆寂、虛空、靜極，不宜強行安到雨海火。用於白噪音類播放。",
+        "embed_text": "虛空、萬籟俱寂、無聲之聲、茫茫、白茫、耳中空響、禪境無物",
+        "cues": [
+          "空山",
+          "萬籟",
+          "寂",
+          "無聲",
+          "虛",
+          "茫茫",
+          "禪",
+          "默"
+        ],
+        "anti_cues": [
+          "雨聲",
+          "潮聲",
+          "人語喧嘩"
+        ],
+        "positive": [
+          "萬籟此都寂",
+          "空山不見人"
+        ],
+        "negative": [
+          "隨風潛入夜潤物細無聲"
+        ]
+      },
+      {
+        "id": "babble",
+        "label_hant": "市聲／人語",
+        "label_hans": "市声／人语",
+        "definition": "可聞人聲、市井、酒家、笙歌、語響，不必看見面孔。",
+        "embed_text": "市井人語、酒家笙歌、客話、喧、語響、琵琶、歌吹",
+        "cues": [
+          "人語",
+          "酒家",
+          "笙歌",
+          "喧嘩",
+          "客",
+          "市",
+          "琵琶",
+          "歌吹",
+          "笑語"
+        ],
+        "anti_cues": [
+          "空山不見人"
+        ],
+        "positive": [
+          "但聞人語響",
+          "夜泊秦淮近酒家"
+        ],
+        "negative": [
+          "獨坐幽篁裏"
+        ]
+      },
+      {
+        "id": "rain",
+        "label_hant": "雨",
+        "label_hans": "雨",
+        "definition": "以可感之雨為主聲：夜雨、細雨、簾雨、雨腳、點滴。淚雨、彈雨等比喻不算，除非兼寫真雨。",
+        "embed_text": "雨聲、夜雨、細雨、簾外雨、芭蕉雨、點滴、霑衣、潤物、廉纖、霢霂",
+        "cues": [
+          "雨",
+          "霖",
+          "霑",
+          "芭蕉",
+          "點滴",
+          "廉纖",
+          "潤物",
+          "雨腳",
+          "簾外"
+        ],
+        "anti_cues": [
+          "淚如雨下",
+          "槍林彈雨"
+        ],
+        "positive": [
+          "隨風潛入夜，潤物細無聲",
+          "卻話巴山夜雨時"
+        ],
+        "negative": [
+          "問君能有幾多愁（無雨）"
+        ]
+      },
+      {
+        "id": "rainonroof",
+        "label_hant": "雨打屋瓦",
+        "label_hans": "雨打屋瓦",
+        "definition": "雨擊屋頂、茅齋、瓦、牀頭屋漏，聽雨在屋內。",
+        "embed_text": "屋漏、瓦上雨、茅齋聽雨、牀頭雨腳、殘荷聽雨、夜闌臥聽風吹雨",
+        "cues": [
+          "屋漏",
+          "茅",
+          "瓦",
+          "齋",
+          "臥聽",
+          "聽雨",
+          "雨腳"
+        ],
+        "anti_cues": [
+          "山雨欲來風滿樓（偏戶外）"
+        ],
+        "positive": [
+          "牀頭屋漏無乾處",
+          "夜闌臥聽風吹雨"
+        ],
+        "negative": [
+          "春潮帶雨晚來急（渡口）"
+        ]
+      },
+      {
+        "id": "thunder",
+        "label_hant": "雷／驟雨",
+        "label_hans": "雷／骤雨",
+        "definition": "雷、風雷、驟雨欲來、大風雨，氣勢大於細雨。",
+        "embed_text": "雷、風雷、驟雨、山雨欲來、風雨大作、電",
+        "cues": [
+          "雷",
+          "風雷",
+          "驟雨",
+          "山雨欲來",
+          "風雨",
+          "電"
+        ],
+        "anti_cues": [
+          "潤物細無聲"
+        ],
+        "positive": [
+          "山雨欲來風滿樓",
+          "夜闌臥聽風吹雨"
+        ],
+        "negative": [
+          "隨風潛入夜"
+        ]
+      },
+      {
+        "id": "ocean",
+        "label_hant": "海／潮",
+        "label_hans": "海／潮",
+        "definition": "海、滄海、潮、浪、洪波，水面開闊非溪澗。",
+        "embed_text": "滄海、大海、潮生、浪、洪波、海上明月、觀海",
+        "cues": [
+          "海",
+          "滄海",
+          "潮",
+          "浪",
+          "洪波",
+          "濤"
+        ],
+        "anti_cues": [
+          "清泉",
+          "澗"
+        ],
+        "positive": [
+          "海上明月共潮生",
+          "洪波湧起"
+        ],
+        "negative": [
+          "泉眼無聲惜細流"
+        ]
+      },
+      {
+        "id": "stream",
+        "label_hant": "溪泉",
+        "label_hans": "溪泉",
+        "definition": "溪、澗、泉、細流、流水，山中或田園之水聲，非大海。",
+        "embed_text": "溪、澗、泉、清流、細流、流水、泉眼、石上泉",
+        "cues": [
+          "溪",
+          "澗",
+          "泉",
+          "流水",
+          "細流",
+          "清泉"
+        ],
+        "anti_cues": [
+          "滄海",
+          "大潮"
+        ],
+        "positive": [
+          "泉眼無聲惜細流",
+          "空山新雨後"
+        ],
+        "negative": [
+          "春江潮水連海平"
+        ]
+      },
+      {
+        "id": "steam",
+        "label_hant": "煙氣／溫泉蒸騰",
+        "label_hans": "烟气／温泉蒸腾",
+        "definition": "煙、嵐、蒸騰、霧氣溫暖，湯泉、茶煙，不是戰火狼煙為主。",
+        "embed_text": "煙嵐、茶煙、溫泉、蒸騰、霧暖、煙銷",
+        "cues": [
+          "煙",
+          "嵐",
+          "茶煙",
+          "溫泉",
+          "蒸"
+        ],
+        "anti_cues": [
+          "狼煙",
+          "烽煙"
+        ],
+        "positive": [
+          "煙銷日出不見人",
+          "茶煙輕颺落花風"
+        ],
+        "negative": [
+          "烽火連三月"
+        ]
+      },
+      {
+        "id": "fire",
+        "label_hant": "火／燈／爐",
+        "label_hans": "火／灯／炉",
+        "definition": "篝火、爐火、殘燈、漁火、燭，暖而可聽可看。戰火、烽火僅當明顯爐燭時不要單標。",
+        "embed_text": "篝火、紅泥小火爐、殘燈、漁火、燭、爐暖、剪燭",
+        "cues": [
+          "火",
+          "爐",
+          "燈",
+          "燭",
+          "漁火",
+          "篝"
+        ],
+        "anti_cues": [
+          "烽火",
+          "戰火",
+          "兵火"
+        ],
+        "positive": [
+          "紅泥小火爐",
+          "江楓漁火對愁眠",
+          "何當共剪西窗燭"
+        ],
+        "negative": [
+          "烽火連三月"
+        ]
+      },
+      {
+        "id": "night",
+        "label_hant": "夜聲（蟲露林野）",
+        "label_hans": "夜声（虫露林野）",
+        "definition": "夜間戶外之聲境：空山夜、蟲露、林夜，非室內不眠專屬。",
+        "embed_text": "夜靜、空山夜、蟲鳴、露、林夜、月下山林",
+        "cues": [
+          "夜靜",
+          "空山",
+          "蟲",
+          "露",
+          "林夜"
+        ],
+        "anti_cues": [
+          "牀前（偏室內靜夜）"
+        ],
+        "positive": [
+          "夜靜春山空",
+          "月落烏啼霜滿天"
+        ],
+        "negative": [
+          "綠蟻新醅酒紅泥小火爐"
+        ]
+      },
+      {
+        "id": "quietnight",
+        "label_hant": "靜夜（室內／不眠）",
+        "label_hans": "静夜（室内／不眠）",
+        "definition": "室內或枕邊之靜夜：不眠、孤燈、牀前月、閨齋，與林野夜聲分開。",
+        "embed_text": "靜夜思、不眠、孤燈、牀前月光、剪燭、閨中夜",
+        "cues": [
+          "靜夜",
+          "不眠",
+          "孤燈",
+          "牀前",
+          "閨",
+          "剪燭"
+        ],
+        "anti_cues": [
+          "空山新雨後（戶外）"
+        ],
+        "positive": [
+          "牀前明月光",
+          "雲母屏風燭影深"
+        ],
+        "negative": [
+          "空山新雨後天氣晚來秋"
+        ]
+      },
+      {
+        "id": "wind",
+        "label_hant": "風",
+        "label_hans": "风",
+        "definition": "以風為可聞之主聲或強配角：松風、秋風、夜風、風滿樓。",
+        "embed_text": "風聲、松風、秋風、夜風、風滿樓、風吹雨",
+        "cues": [
+          "風",
+          "松風",
+          "風滿樓",
+          "風吹"
+        ],
+        "anti_cues": [
+          "風流（比喻無風）"
+        ],
+        "positive": [
+          "山雨欲來風滿樓",
+          "風也蕭蕭"
+        ],
+        "negative": [
+          "風流人物"
+        ]
+      },
+      {
+        "id": "boat",
+        "label_hant": "舟楫",
+        "label_hans": "舟楫",
+        "definition": "人在舟中或寫漁舟、孤舟、帆、槳聲。",
+        "embed_text": "孤舟、漁舟、一葉、帆、槳、欸乃、夜泊",
+        "cues": [
+          "舟",
+          "船",
+          "帆",
+          "槳",
+          "漁",
+          "欸乃",
+          "夜泊"
+        ],
+        "anti_cues": [
+          "舟車勞頓（無水）"
+        ],
+        "positive": [
+          "野渡無人舟自橫",
+          "輕舟已過萬重山"
+        ],
+        "negative": [
+          "停車坐愛楓林晚"
+        ]
+      },
+      {
+        "id": "train",
+        "label_hant": "羈旅車馬／驛路",
+        "label_hans": "羁旅车马／驿路",
+        "definition": "行路、驛館、車馬、遠行，對應火車／巴士類現代旅聲。不必出現火車。",
+        "embed_text": "驛、茅店、板橋、遠行、天涯、路上行人、車馬",
+        "cues": [
+          "驛",
+          "店",
+          "遠行",
+          "天涯",
+          "路上",
+          "車",
+          "馬",
+          "羈"
+        ],
+        "anti_cues": [
+          "遊園"
+        ],
+        "positive": [
+          "雞聲茅店月，人跡板橋霜",
+          "斷腸人在天涯"
+        ],
+        "negative": [
+          "採菊東籬下"
+        ]
+      },
+      {
+        "id": "airplane",
+        "label_hant": "高處／雲行",
+        "label_hans": "高处／云行",
+        "definition": "高空、雲霄、一鶴排雲、輕舟過萬山那種迅速越過、身在雲上的曠感。對應機艙。",
+        "embed_text": "碧霄、排雲、高樓、雲中、萬重山已過、身在天上",
+        "cues": [
+          "霄",
+          "雲上",
+          "排雲",
+          "萬重山",
+          "高"
+        ],
+        "anti_cues": [
+          "白雲深處有人家（隱逸不是飛行）"
+        ],
+        "positive": [
+          "便引詩情到碧霄",
+          "輕舟已過萬重山"
+        ],
+        "negative": [
+          "白雲生處有人家"
+        ]
+      }
+    ],
+    "time": [
+      {
+        "id": "dawn",
+        "label_hant": "曉",
+        "label_hans": "晓",
+        "definition": "黎明、平明、雞聲、曙。",
+        "embed_text": "曉 黎明、平明、雞聲、曙。",
+        "cues": [
+          "曉",
+          "曙",
+          "平明",
+          "雞聲",
+          "晨"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "春眠不覺曉",
+          "平明送客楚山孤"
+        ],
+        "negative": [
+          "月落烏啼霜滿天"
+        ]
+      },
+      {
+        "id": "day",
+        "label_hant": "晝",
+        "label_hans": "昼",
+        "definition": "白日、晴晝，非暮夜。",
+        "embed_text": "晝 白日、晴晝，非暮夜。",
+        "cues": [
+          "日",
+          "晝",
+          "午"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "天光雲影共徘徊"
+        ],
+        "negative": [
+          "月落烏啼"
+        ]
+      },
+      {
+        "id": "dusk",
+        "label_hant": "暮／黃昏",
+        "label_hans": "暮／黄昏",
+        "definition": "日暮、夕陽、晚來、黃昏。",
+        "embed_text": "暮／黃昏 日暮、夕陽、晚來、黃昏。",
+        "cues": [
+          "暮",
+          "夕",
+          "黃昏",
+          "晚來",
+          "日沉"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "日暮蒼山遠",
+          "夕陽西下"
+        ],
+        "negative": [
+          "牀前明月光"
+        ]
+      },
+      {
+        "id": "night-time",
+        "label_hant": "夜",
+        "label_hans": "夜",
+        "definition": "明確夜間。可與 quietnight/night 疊加。",
+        "embed_text": "夜 明確夜間。可與 quietnight/night 疊加。",
+        "cues": [
+          "夜",
+          "更",
+          "宵"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "夜靜春山空"
+        ],
+        "negative": [
+          "春眠不覺曉"
+        ]
+      },
+      {
+        "id": "midnight",
+        "label_hant": "子夜／三更",
+        "label_hans": "子夜／三更",
+        "definition": "夜深、夜闌、三更、五更。",
+        "embed_text": "子夜／三更 夜深、夜闌、三更、五更。",
+        "cues": [
+          "夜闌",
+          "三更",
+          "五更",
+          "子夜",
+          "夜深"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "夜闌臥聽風吹雨"
+        ],
+        "negative": [
+          "春曉"
+        ]
+      }
+    ],
+    "season": [
+      {
+        "id": "spring",
+        "label_hant": "春",
+        "label_hans": "春",
+        "definition": "季節為春，或物候強烈指向春。",
+        "embed_text": "春",
+        "cues": [
+          "春",
+          "花",
+          "鶯",
+          "燕"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "春眠不覺曉",
+          "清明時節雨紛紛"
+        ],
+        "negative": []
+      },
+      {
+        "id": "summer",
+        "label_hant": "夏",
+        "label_hans": "夏",
+        "definition": "季節為夏，或物候強烈指向夏。",
+        "embed_text": "夏",
+        "cues": [
+          "夏",
+          "荷",
+          "蟬"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "泉眼無聲惜細流"
+        ],
+        "negative": []
+      },
+      {
+        "id": "autumn",
+        "label_hant": "秋",
+        "label_hans": "秋",
+        "definition": "季節為秋，或物候強烈指向秋。",
+        "embed_text": "秋",
+        "cues": [
+          "秋",
+          "霜",
+          "楓",
+          "雁"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "空山新雨後天氣晚來秋"
+        ],
+        "negative": []
+      },
+      {
+        "id": "winter",
+        "label_hant": "冬",
+        "label_hans": "冬",
+        "definition": "季節為冬，或物候強烈指向冬。",
+        "embed_text": "冬",
+        "cues": [
+          "冬",
+          "雪",
+          "寒",
+          "冰"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "孤舟蓑笠翁獨釣寒江雪"
+        ],
+        "negative": []
+      }
+    ],
+    "weather": [
+      {
+        "id": "clear",
+        "label_hant": "霽／月明",
+        "label_hans": "霁／月明",
+        "definition": "晴、月明、霽，無雨障。",
+        "embed_text": "晴、月明、霽，無雨障。",
+        "cues": [
+          "霽",
+          "月明",
+          "晴空"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "晴空一鶴排雲上"
+        ],
+        "negative": [
+          "雨紛紛"
+        ]
+      },
+      {
+        "id": "cloud",
+        "label_hant": "雲",
+        "label_hans": "云",
+        "definition": "雲作為景象，非僅修辭。",
+        "embed_text": "雲作為景象，非僅修辭。",
+        "cues": [
+          "雲",
+          "雲影"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "天光雲影共徘徊"
+        ],
+        "negative": []
+      },
+      {
+        "id": "mist",
+        "label_hant": "煙雨／霧",
+        "label_hans": "烟雨／雾",
+        "definition": "煙、霧、濛、籠，能見度低。",
+        "embed_text": "煙、霧、濛、籠，能見度低。",
+        "cues": [
+          "煙",
+          "霧",
+          "濛",
+          "籠"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "煙籠寒水月籠沙"
+        ],
+        "negative": []
+      },
+      {
+        "id": "storm",
+        "label_hant": "風雨大作",
+        "label_hans": "风雨大作",
+        "definition": "大風大雨，氣勢強。",
+        "embed_text": "大風大雨，氣勢強。",
+        "cues": [
+          "風雨",
+          "驟",
+          "大作"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "山雨欲來風滿樓"
+        ],
+        "negative": [
+          "潤物細無聲"
+        ]
+      },
+      {
+        "id": "snow",
+        "label_hant": "雪",
+        "label_hans": "雪",
+        "definition": "雪、冰霰。",
+        "embed_text": "雪、冰霰。",
+        "cues": [
+          "雪",
+          "冰",
+          "霰"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "獨釣寒江雪"
+        ],
+        "negative": []
+      }
+    ],
+    "place": [
+      {
+        "id": "window",
+        "label_hant": "窗／簾",
+        "label_hans": "窗／帘",
+        "definition": "窗邊、簾內外聽雨望月。",
+        "embed_text": "窗邊、簾內外聽雨望月。",
+        "cues": [
+          "窗",
+          "簾",
+          "戶"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "何當共剪西窗燭"
+        ],
+        "negative": []
+      },
+      {
+        "id": "roof",
+        "label_hant": "屋／茅齋",
+        "label_hans": "屋／茅斋",
+        "definition": "屋內、茅店、白屋、齋。",
+        "embed_text": "屋內、茅店、白屋、齋。",
+        "cues": [
+          "屋",
+          "茅",
+          "齋",
+          "店"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "牀頭屋漏無乾處"
+        ],
+        "negative": []
+      },
+      {
+        "id": "mountain",
+        "label_hant": "山",
+        "label_hans": "山",
+        "definition": "山中、空山、南山。",
+        "embed_text": "山中、空山、南山。",
+        "cues": [
+          "山",
+          "峰",
+          "嶺"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "悠然見南山"
+        ],
+        "negative": []
+      },
+      {
+        "id": "forest",
+        "label_hant": "林／松",
+        "label_hans": "林／松",
+        "definition": "林、松、竹林、幽篁。",
+        "embed_text": "林、松、竹林、幽篁。",
+        "cues": [
+          "林",
+          "松",
+          "篁",
+          "竹"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "獨坐幽篁裏"
+        ],
+        "negative": []
+      },
+      {
+        "id": "river",
+        "label_hant": "江河",
+        "label_hans": "江河",
+        "definition": "江、河、渡，非海。",
+        "embed_text": "江、河、渡，非海。",
+        "cues": [
+          "江",
+          "河",
+          "渡",
+          "浦"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "春潮帶雨晚來急"
+        ],
+        "negative": []
+      },
+      {
+        "id": "lake",
+        "label_hant": "湖／塘",
+        "label_hans": "湖／塘",
+        "definition": "湖、塘、池、鑑。",
+        "embed_text": "湖、塘、池、鑑。",
+        "cues": [
+          "湖",
+          "塘",
+          "池"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "半畝方塘一鑑開"
+        ],
+        "negative": []
+      },
+      {
+        "id": "sea",
+        "label_hant": "海",
+        "label_hans": "海",
+        "definition": "海面、海上。",
+        "embed_text": "海面、海上。",
+        "cues": [
+          "海",
+          "滄海"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "海上明月共潮生"
+        ],
+        "negative": []
+      },
+      {
+        "id": "shore",
+        "label_hant": "汀／浦／岸",
+        "label_hans": "汀／浦／岸",
+        "definition": "沙岸、汀洲、浦口。",
+        "embed_text": "沙岸、汀洲、浦口。",
+        "cues": [
+          "汀",
+          "浦",
+          "岸",
+          "沙"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "月籠沙"
+        ],
+        "negative": []
+      },
+      {
+        "id": "boat-place",
+        "label_hant": "舟上",
+        "label_hans": "舟上",
+        "definition": "視點在船上。",
+        "embed_text": "視點在船上。",
+        "cues": [
+          "舟",
+          "船",
+          "泊"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "夜泊秦淮近酒家"
+        ],
+        "negative": []
+      },
+      {
+        "id": "inn",
+        "label_hant": "驛館／酒家",
+        "label_hans": "驿馆／酒家",
+        "definition": "客舍、酒家、茅店。",
+        "embed_text": "客舍、酒家、茅店。",
+        "cues": [
+          "驛",
+          "館",
+          "酒家",
+          "店"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "近酒家"
+        ],
+        "negative": []
+      },
+      {
+        "id": "city",
+        "label_hant": "城／市",
+        "label_hans": "城／市",
+        "definition": "城郭、市井、秦淮一類都會水岸。",
+        "embed_text": "城郭、市井、秦淮一類都會水岸。",
+        "cues": [
+          "城",
+          "市",
+          "郭"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "夜泊秦淮"
+        ],
+        "negative": []
+      },
+      {
+        "id": "temple",
+        "label_hant": "寺／庵",
+        "label_hans": "寺／庵",
+        "definition": "寺、庵、鐘磬。",
+        "embed_text": "寺、庵、鐘磬。",
+        "cues": [
+          "寺",
+          "庵",
+          "鐘磬",
+          "禪"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "但餘鐘磬音"
+        ],
+        "negative": []
+      },
+      {
+        "id": "room",
+        "label_hant": "閨／齋／室",
+        "label_hans": "闺／斋／室",
+        "definition": "室內私空間。",
+        "embed_text": "室內私空間。",
+        "cues": [
+          "閨",
+          "齋",
+          "室",
+          "牀"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "牀前明月光"
+        ],
+        "negative": []
+      }
+    ],
+    "mood": [
+      {
+        "id": "still",
+        "label_hant": "靜",
+        "label_hans": "静",
+        "definition": "以靜為主，無喧無怒。",
+        "embed_text": "以靜為主，無喧無怒。",
+        "cues": [
+          "靜",
+          "寂",
+          "閒寂"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "夜靜春山空"
+        ],
+        "negative": []
+      },
+      {
+        "id": "solitude",
+        "label_hant": "孤／獨",
+        "label_hans": "孤／独",
+        "definition": "一人、孤舟、獨坐。",
+        "embed_text": "一人、孤舟、獨坐。",
+        "cues": [
+          "孤",
+          "獨",
+          "一人"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "孤舟蓑笠翁"
+        ],
+        "negative": []
+      },
+      {
+        "id": "longing",
+        "label_hant": "思／望",
+        "label_hans": "思／望",
+        "definition": "相思、望鄉、寄北、天涯。",
+        "embed_text": "相思、望鄉、寄北、天涯。",
+        "cues": [
+          "思",
+          "望",
+          "憶",
+          "故園",
+          "天涯"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "何當共剪西窗燭"
+        ],
+        "negative": []
+      },
+      {
+        "id": "ease",
+        "label_hant": "閒",
+        "label_hans": "闲",
+        "definition": "閒適、悠然、漁隱。",
+        "embed_text": "閒適、悠然、漁隱。",
+        "cues": [
+          "閒",
+          "悠然",
+          "適"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "採菊東籬下悠然見南山"
+        ],
+        "negative": []
+      },
+      {
+        "id": "vast",
+        "label_hant": "曠",
+        "label_hans": "旷",
+        "definition": "開闊、蒼茫、連海平。",
+        "embed_text": "開闊、蒼茫、連海平。",
+        "cues": [
+          "闊",
+          "茫",
+          "萬",
+          "海平"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "潮平兩岸闊"
+        ],
+        "negative": []
+      },
+      {
+        "id": "melancholy",
+        "label_hant": "愁",
+        "label_hans": "愁",
+        "definition": "愁、斷腸、欲斷魂。勿給所有秋天濫貼。",
+        "embed_text": "愁、斷腸、欲斷魂。勿給所有秋天濫貼。",
+        "cues": [
+          "愁",
+          "斷腸",
+          "魂"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "路上行人欲斷魂"
+        ],
+        "negative": []
+      },
+      {
+        "id": "warmth",
+        "label_hant": "溫／暖",
+        "label_hans": "温／暖",
+        "definition": "爐暖、酒溫、人間煙火。",
+        "embed_text": "爐暖、酒溫、人間煙火。",
+        "cues": [
+          "暖",
+          "溫",
+          "爐",
+          "酒"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "紅泥小火爐"
+        ],
+        "negative": []
+      },
+      {
+        "id": "awe",
+        "label_hant": "驚／壯",
+        "label_hans": "惊／壮",
+        "definition": "壯浪、欲來、排雲。",
+        "embed_text": "壯浪、欲來、排雲。",
+        "cues": [
+          "湧",
+          "欲來",
+          "排雲",
+          "壯"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "洪波湧起"
+        ],
+        "negative": []
+      },
+      {
+        "id": "sleep",
+        "label_hant": "眠／寐",
+        "label_hans": "眠／寐",
+        "definition": "眠、夢、臥聽。",
+        "embed_text": "眠、夢、臥聽。",
+        "cues": [
+          "眠",
+          "夢",
+          "臥",
+          "睡"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "春眠不覺曉"
+        ],
+        "negative": []
+      },
+      {
+        "id": "travel",
+        "label_hant": "羈旅",
+        "label_hans": "羁旅",
+        "definition": "在路、未歸、遠客。",
+        "embed_text": "在路、未歸、遠客。",
+        "cues": [
+          "行",
+          "客",
+          "羈",
+          "遠"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "斷腸人在天涯"
+        ],
+        "negative": []
+      },
+      {
+        "id": "zen",
+        "label_hant": "禪／空",
+        "label_hans": "禅／空",
+        "definition": "空、寂、禪意，無說教也可。",
+        "embed_text": "空、寂、禪意，無說教也可。",
+        "cues": [
+          "空",
+          "禪",
+          "寂"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "空山不見人"
+        ],
+        "negative": []
+      }
+    ],
+    "image": [
+      {
+        "id": "moon",
+        "label_hant": "月",
+        "label_hans": "月",
+        "definition": "金句中出現或強烈暗示此物象：月。",
+        "embed_text": "月",
+        "cues": [
+          "月"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "牀前明月光"
+        ],
+        "negative": []
+      },
+      {
+        "id": "lamp",
+        "label_hant": "燈／燭",
+        "label_hans": "灯／烛",
+        "definition": "金句中出現或強烈暗示此物象：燈／燭。",
+        "embed_text": "燈／燭",
+        "cues": [
+          "燈",
+          "燭"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "共剪西窗燭"
+        ],
+        "negative": []
+      },
+      {
+        "id": "rain-img",
+        "label_hant": "雨中物象",
+        "label_hans": "雨中物象",
+        "definition": "金句中出現或強烈暗示此物象：雨中物象。",
+        "embed_text": "雨中物象",
+        "cues": [
+          "芭蕉",
+          "荷",
+          "點滴"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "芭蕉"
+        ],
+        "negative": []
+      },
+      {
+        "id": "wave",
+        "label_hant": "潮／浪",
+        "label_hans": "潮／浪",
+        "definition": "金句中出現或強烈暗示此物象：潮／浪。",
+        "embed_text": "潮／浪",
+        "cues": [
+          "潮",
+          "浪",
+          "波"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "洪波湧起"
+        ],
+        "negative": []
+      },
+      {
+        "id": "pine",
+        "label_hant": "松",
+        "label_hans": "松",
+        "definition": "金句中出現或強烈暗示此物象：松。",
+        "embed_text": "松",
+        "cues": [
+          "松"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "松下問童子"
+        ],
+        "negative": []
+      },
+      {
+        "id": "bamboo",
+        "label_hant": "竹",
+        "label_hans": "竹",
+        "definition": "金句中出現或強烈暗示此物象：竹。",
+        "embed_text": "竹",
+        "cues": [
+          "竹",
+          "篁"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "獨坐幽篁裏"
+        ],
+        "negative": []
+      },
+      {
+        "id": "firefly",
+        "label_hant": "螢",
+        "label_hans": "萤",
+        "definition": "金句中出現或強烈暗示此物象：螢。",
+        "embed_text": "螢",
+        "cues": [
+          "螢"
+        ],
+        "anti_cues": [],
+        "positive": [],
+        "negative": []
+      },
+      {
+        "id": "gull",
+        "label_hant": "鷗／雁",
+        "label_hans": "鸥／雁",
+        "definition": "金句中出現或強烈暗示此物象：鷗／雁。",
+        "embed_text": "鷗／雁",
+        "cues": [
+          "鷗",
+          "雁",
+          "鷺"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "西塞山前白鷺飛"
+        ],
+        "negative": []
+      },
+      {
+        "id": "boat-img",
+        "label_hant": "舟楫物象",
+        "label_hans": "舟楫物象",
+        "definition": "金句中出現或強烈暗示此物象：舟楫物象。",
+        "embed_text": "舟楫物象",
+        "cues": [
+          "舟",
+          "帆",
+          "楫"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "一帆懸"
+        ],
+        "negative": []
+      },
+      {
+        "id": "wine",
+        "label_hant": "酒／茶",
+        "label_hans": "酒／茶",
+        "definition": "金句中出現或強烈暗示此物象：酒／茶。",
+        "embed_text": "酒／茶",
+        "cues": [
+          "酒",
+          "茶",
+          "醅"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "綠蟻新醅酒"
+        ],
+        "negative": []
+      },
+      {
+        "id": "bell",
+        "label_hant": "鐘／更",
+        "label_hans": "钟／更",
+        "definition": "金句中出現或強烈暗示此物象：鐘／更。",
+        "embed_text": "鐘／更",
+        "cues": [
+          "鐘",
+          "更",
+          "雞聲"
+        ],
+        "anti_cues": [],
+        "positive": [
+          "但餘鐘磬音"
+        ],
+        "negative": []
+      }
+    ],
+    "layout": [
+      {
+        "id": "layout-vertical",
+        "label_hant": "宜豎排",
+        "label_hans": "宜竖排",
+        "definition": "五七言整句、對仗，適合繁體豎排。",
+        "embed_text": "五言七言對仗豎排",
+        "cues": [],
+        "anti_cues": [],
+        "positive": [
+          "牀前明月光"
+        ],
+        "negative": [
+          "知否知否"
+        ]
+      },
+      {
+        "id": "layout-horizontal",
+        "label_hant": "宜橫排",
+        "label_hans": "宜横排",
+        "definition": "詞、曲、口語短句、三字頓，適合橫題。",
+        "embed_text": "小令散曲口語短句橫排",
+        "cues": [],
+        "anti_cues": [],
+        "positive": [
+          "夕陽西下，斷腸人在天涯"
+        ],
+        "negative": []
+      }
+    ]
+  }
+}

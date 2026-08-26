@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-server/
+data/mixes/
+.env
+.DS_Store
+asset/SoundsWeb/
+*.log

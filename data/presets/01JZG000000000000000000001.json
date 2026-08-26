@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "01JZG000000000000000000001",
+  "name": "白噪音",
+  "created_at": "2026-08-25T12:00:00.000Z",
+  "updated_at": "2026-08-25T12:00:00.000Z",
+  "master_volume": 0.8,
+  "tracks": [
+    {
+      "id": "01JZG00000000000000000TRK1",
+      "kind": "file",
+      "target_id": "whitenoise",
+      "volume": 0.8,
+      "muted": false,
+      "fade_in_ms": 1500,
+      "fade_out_ms": 800,
+      "loop": true
+    }
+  ],
+  "shuffle": { "avoid_last_n": 1 }
+}

@@ -1,0 +1,91 @@
+{
+  "source": "quotes.merged.json",
+  "output": "quotes.json",
+  "input": 2500,
+  "unique_ids": 1512,
+  "duplicate_rows": 988,
+  "kept": 1508,
+  "merged_invalid": 7,
+  "kept_invalid": 0,
+  "dropped": 7,
+  "dropped_sample": [
+    {
+      "id": "bai-ju-yi-quote-c97a9b",
+      "reasons": [
+        "no_sound"
+      ]
+    },
+    {
+      "id": "bai-ju-yi-quote-91f508",
+      "reasons": [
+        "no_sound"
+      ]
+    },
+    {
+      "id": "li-bai-quote-b0e23c",
+      "reasons": [
+        "no_sound"
+      ]
+    },
+    {
+      "id": "du-fu-quote-d17a04",
+      "reasons": [
+        "no_sound"
+      ]
+    },
+    {
+      "id": "li-bai-quote-a2dba9",
+      "reasons": [
+        "no_sound"
+      ]
+    },
+    {
+      "id": "bai-ju-yi-quote-d3bb46",
+      "reasons": [
+        "no_sound"
+      ]
+    },
+    {
+      "id": "bai-ju-yi-quote-acf8cf",
+      "reasons": [
+        "no_sound"
+      ]
+    }
+  ],
+  "kept_invalid_sample": [],
+  "reason_counts": {
+    "no_sound": 7
+  },
+  "kept_reason_counts": {},
+  "unknown_tags": [],
+  "unknown_seats": [],
+  "seat_counts": {
+    "airplane": 857,
+    "mix-rain-night": 825,
+    "traffic": 802,
+    "mix-ocean-rain": 780,
+    "train": 730,
+    "bus": 701,
+    "mix-stream-rain": 694,
+    "mix-rain-fire": 685,
+    "rainonroof": 591,
+    "mix-quiet-rain": 581,
+    "rain": 567,
+    "boat": 532,
+    "pink": 459,
+    "mix-stream-night": 456,
+    "babble": 428,
+    "mix-airplane-thunder": 396,
+    "night": 366,
+    "stream": 361,
+    "mix-ocean-fire": 355,
+    "fire": 349,
+    "steam": 328,
+    "white": 309,
+    "brown": 254,
+    "ocean": 242,
+    "noise": 212,
+    "quietnight": 143,
+    "thunder": 53
+  }
+}

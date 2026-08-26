@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "script": "zh-Hant",
+  "purpose": "播放頁金句命中：依混音種類、聲音標籤、畫面意境，抽一首詩詞的題名與一兩句。本文檔是播放側展開規則。語料對號入座請用同目錄 label_schema.json（含定義、線索、正反例、play_seats）。",
+  "label_authority": "label_schema.json",
+  "display": {
+    "font_stack": ["Source Han Serif TC", "Noto Serif TC", "Songti TC", "Kaiti TC", "PMingLiU", "serif"],
+    "default_layout": "vertical",
+    "layouts": {
+      "vertical": {
+        "id": "vertical",
+        "label": "豎排",
+        "direction": "ttb-rtl",
+        "title": "詩題小字在右或上",
+        "body": "一句一行，兩句為一聯",
+        "prefer_forms": ["五言", "七言"]
+      },
+      "horizontal": {
+        "id": "horizontal",
+        "label": "橫排",
+        "direction": "ltr",
+        "title": "詞牌／詩題在上，作者在側",
+        "body": "一句一行或用空格斷開",
+        "prefer_forms": ["小令", "絕句橫題"]
+      }
+    },
+    "fields_on_screen": ["title", "lines", "author"]
+  },
+  "quote_record": {
+    "id": "穩定短 id，建議 author-title-lineIndex",
+    "title": "詩題或詞牌，繁體",
+    "author": "作者，繁體",
+    "dynasty": "先秦|漢|魏晉|唐|宋|元|明|清|近代",
+    "form": "五言絕句|七言絕句|五言律|七言律|樂府|古風|小令|長調|散曲",
+    "lines": "長度 1–2 的字串陣列，即金句",
+    "full_optional": "全詩可另存，不進播放頁",
+    "tags": "本文件 facets.*.id 的子集",
+    "layout": "vertical|horizontal|either",
+    "weight": "可選 0–1，默認 1，用於同標籤內加權抽籤",
+    "notes": "可選，校勘／不宜橫排等"
+  },
+  "facets": {
+    "sound": {
+      "label": "聲境（對齊 VoiceStream 聲音類）",
+      "tags": [
+        { "id": "noise", "label": "白噪／空響", "aliases": ["空", "白聲"] },
+        { "id": "babble", "label": "市聲／人語", "aliases": ["市井", "酒家"] },
+        { "id": "rain", "label": "雨", "aliases": ["夜雨", "簾雨", "芭蕉"] },
+        { "id": "rainonroof", "label": "雨打屋瓦", "aliases": ["茅屋", "瓦"] },
+        { "id": "thunder", "label": "雷", "aliases": ["風雷", "驟雨"] },
+        { "id": "ocean", "label": "海／潮", "aliases": ["滄海", "潮", "浪"] },
+        { "id": "stream", "label": "溪泉", "aliases": ["澗", "泉", "流水"] },
+        { "id": "steam", "label": "煙氣／溫泉", "aliases": ["煙", "嵐"] },
+        { "id": "fire", "label": "火／燈", "aliases": ["篝火", "殘燈", "爐"] },
+        { "id": "night", "label": "夜聲", "aliases": ["蟲", "露"] },
+        { "id": "quietnight", "label": "靜夜", "aliases": ["不眠", "孤燈"] },
+        { "id": "wind", "label": "風", "aliases": ["松風", "秋風"] },
+        { "id": "boat", "label": "舟楫", "aliases": ["漁舟", "孤舟"] },
+        { "id": "train", "label": "行旅車馬", "aliases": ["驛", "車"] },
+        { "id": "airplane", "label": "高處／雲行", "aliases": ["雲", "高樓"] }
+      ]
+    },
+    "time": {
+      "label": "時辰",
+      "tags": [
+        { "id": "dawn", "label": "曉" },
+        { "id": "day", "label": "晝" },
+        { "id": "dusk", "label": "暮／黃昏" },
+        { "id": "night-time", "label": "夜" },
+        { "id": "midnight", "label": "子夜／三更" }
+      ]
+    },
+    "season": {
+      "label": "季候",
+      "tags": [
+        { "id": "spring", "label": "春" },
+        { "id": "summer", "label": "夏" },
+        { "id": "autumn", "label": "秋" },
+        { "id": "winter", "label": "冬" }
+      ]
+    },
+    "weather": {
+      "label": "天氣",
+      "tags": [
+        { "id": "clear", "label": "霽／月" },
+        { "id": "cloud", "label": "雲" },
+        { "id": "mist", "label": "煙雨／霧" },
+        { "id": "storm", "label": "風雨大作" },
+        { "id": "snow", "label": "雪" }
+      ]
+    },
+    "place": {
+      "label": "空間",
+      "tags": [
+        { "id": "window", "label": "窗／簾" },
+        { "id": "roof", "label": "屋／茅齋" },
+        { "id": "mountain", "label": "山" },
+        { "id": "forest", "label": "林／松" },
+        { "id": "river", "label": "江河" },
+        { "id": "lake", "label": "湖／塘" },
+        { "id": "sea", "label": "海" },
+        { "id": "shore", "label": "汀／浦" },
+        { "id": "boat-place", "label": "舟上" },
+        { "id": "inn", "label": "驛館／酒家" },
+        { "id": "city", "label": "城／市" },
+        { "id": "temple", "label": "寺／庵" },
+        { "id": "room", "label": "閨／齋" }
+      ]
+    },
+    "mood": {
+      "label": "意境（抽句主軸）",
+      "tags": [
+        { "id": "still", "label": "靜" },
+        { "id": "solitude", "label": "孤／獨" },
+        { "id": "longing", "label": "思／望" },
+        { "id": "ease", "label": "閒" },
+        { "id": "vast", "label": "曠" },
+        { "id": "melancholy", "label": "愁" },
+        { "id": "warmth", "label": "溫／暖" },
+        { "id": "awe", "label": "驚／壯" },
+        { "id": "sleep", "label": "眠／寐" },
+        { "id": "travel", "label": "羈旅" },
+        { "id": "zen", "label": "禪／空" }
+      ]
+    },
+    "image": {
+      "label": "物象（金句裡應出現或暗示）",
+      "tags": [
+        { "id": "moon", "label": "月" },
+        { "id": "lamp", "label": "燈／燭" },
+        { "id": "rain-img", "label": "雨點／芭蕉／荷" },
+        { "id": "wave", "label": "潮／浪" },
+        { "id": "pine", "label": "松" },
+        { "id": "bamboo", "label": "竹" },
+        { "id": "firefly", "label": "螢" },
+        { "id": "gull", "label": "鷗／雁" },
+        { "id": "boat-img", "label": "舟／楫" },
+        { "id": "wine", "label": "酒／茶" },
+        { "id": "bell", "label": "鐘／更" }
+      ]
+    }
+  },
+  "sound_map": {
+    "comment": "VoiceStream catalog / background 標籤 → 本體系 tags。播放頁先把當前軌道收成 play_tags，再展開。",
+    "noise": ["noise", "still", "zen", "mist"],
+    "white": ["noise", "still", "mist", "vast"],
+    "pink": ["noise", "warmth", "room"],
+    "brown": ["noise", "still", "room"],
+    "babble": ["babble", "inn", "city", "wine"],
+    "rain": ["rain", "mist", "window", "melancholy", "rain-img"],
+    "rainonroof": ["rain", "rainonroof", "roof", "window", "sleep"],
+    "thunder": ["thunder", "storm", "awe", "rain"],
+    "ocean": ["ocean", "sea", "vast", "wave", "shore"],
+    "stream": ["stream", "river", "forest", "ease", "zen"],
+    "steam": ["steam", "mist", "warmth", "room"],
+    "fire": ["fire", "lamp", "warmth", "night-time"],
+    "night": ["night", "night-time", "still", "moon", "solitude"],
+    "quietnight": ["quietnight", "night-time", "still", "sleep", "room", "moon", "lamp"],
+    "traffic": ["travel", "city"],
+    "airplane": ["airplane", "cloud", "vast", "travel"],
+    "boat": ["boat", "boat-place", "river", "solitude", "boat-img"],
+    "bus": ["travel", "city", "night-time"],
+    "train": ["train", "travel", "longing", "inn"],
+    "dawn": ["dawn", "stream", "ease"],
+    "dusk": ["dusk", "fire", "warmth", "melancholy"],
+    "midnight": ["midnight", "night-time", "still", "solitude"],
+    "night-time": ["night-time", "night", "moon"],
+    "storm": ["thunder", "storm", "awe", "rain"],
+    "day": ["day", "ease"]
+  },
+  "mix_combine": {
+    "comment": "多軌混音：各軌展開後去重。命中時 quote.tags 與 expanded 的交集越大越好；quote 多出的標籤輕罰。單標籤走 defaults。",
+    "hit_weight": 3,
+    "extra_penalty": 0.35,
+    "subset_bonus": 1.2,
+    "layout_bias": {
+      "quietnight": "vertical",
+      "night": "vertical",
+      "rain": "vertical",
+      "ocean": "horizontal",
+      "babble": "horizontal",
+      "fire": "vertical"
+    },
+    "defaults": {
+      "rain": ["rain", "night-time", "window"],
+      "night": ["night-time", "still", "moon"],
+      "quietnight": ["quietnight", "still", "sleep"],
+      "fire": ["fire", "warmth", "lamp"],
+      "ocean": ["ocean", "vast", "moon"],
+      "stream": ["stream", "ease", "forest"],
+      "thunder": ["thunder", "storm", "awe"],
+      "noise": ["still", "zen"],
+      "traffic": ["travel"]
+    }
+  },
+  "exclude_from_pool": {
+    "comment": "後續語料提煉時可打這些旗，播放頁預設不抽。",
+    "flags": ["too_long", "proper_name_heavy", "political", "needs_context"]
+  }
+}

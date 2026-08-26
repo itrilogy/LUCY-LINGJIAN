@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VoiceStream · 背景匹配</title>
+  <style>
+    :root {
+      --ui: #f4efe6;
+      --muted: rgba(244, 239, 230, 0.55);
+      --line: rgba(244, 239, 230, 0.16);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #07080a; color: var(--ui); font: 13px/1.45 "Songti SC", "Source Han Serif SC", Georgia, serif; }
+    .stage { position: fixed; inset: 0; overflow: hidden; }
+    .bg {
+      position: absolute; inset: -6%;
+      background: #0a0a0c center / cover no-repeat;
+      transform-origin: 50% 45%;
+      animation: ken 48s ease-in-out infinite alternate;
+      filter: saturate(0.92) contrast(1.04);
+    }
+    @keyframes ken {
+      from { transform: scale(1); }
+      to { transform: scale(1.08) translate3d(-1.2%, -0.6%, 0); }
+    }
+    canvas#fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .vignette {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 40%, transparent 40%, rgba(0,0,0,.38) 100%),
+        linear-gradient(180deg, rgba(0,0,0,.18) 0%, transparent 22%, transparent 72%, rgba(0,0,0,.55) 100%);
+    }
+    .bloom {
+      position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: .22;
+      background: radial-gradient(ellipse at var(--lx, 50%) var(--ly, 70%), var(--lc, rgba(255,180,80,.35)), transparent 55%);
+      animation: breathe 6.4s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: .14; }
+      50% { opacity: .32; }
+    }
+    .player {
+      position: absolute; left: 8%; right: 8%; bottom: 7%;
+      display: grid; gap: 10px; justify-items: center;
+    }
+    .player .title { letter-spacing: .18em; font-size: 12px; color: var(--muted); text-transform: none; }
+    .bar {
+      width: min(420px, 70vw); height: 2px; background: rgba(255,255,255,.16); border-radius: 2px; overflow: hidden;
+    }
+    .bar > i {
+      display: block; height: 100%; width: 38%;
+      background: #fff;
+      transform-origin: left center;
+      animation: prog 18s linear infinite;
+    }
+    @keyframes prog { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    .viz {
+      display: flex; align-items: flex-end; gap: 3px; height: 28px; opacity: .55;
+    }
+    .viz span {
+      width: 2px; background: #fff; border-radius: 1px;
+      animation: eq 1.6s ease-in-out infinite;
+      animation-delay: calc(var(--i) * 90ms);
+      height: 40%;
+    }
+    @keyframes eq {
+      0%, 100% { transform: scaleY(.35); }
+      50% { transform: scaleY(1); }
+    }
+    .dock {
+      position: absolute; top: 0; left: 0; bottom: 0; width: 240px;
+      padding: 22px 16px 28px;
+      background: linear-gradient(90deg, rgba(0,0,0,.58), rgba(0,0,0,.12) 88%, transparent);
+      overflow: auto; scrollbar-width: thin;
+    }
+    .dock h1 { font-size: 14px; font-weight: 500; margin: 0 0 4px; letter-spacing: .12em; }
+    .dock p { margin: 0 0 16px; color: var(--muted); font-size: 11px; }
+    .group { margin-bottom: 14px; }
+    .group h2 { margin: 0 0 8px; font-size: 10px; letter-spacing: .2em; color: var(--muted); font-weight: 500; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    button.chip {
+      appearance: none; border: 1px solid var(--line); background: rgba(255,255,255,.04);
+      color: var(--ui); padding: 4px 8px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 11px;
+    }
+    button.chip.on { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.45); }
+    .hit {
+      position: absolute; top: 22px; right: 22px; text-align: right; color: var(--muted); font-size: 11px;
+      letter-spacing: .08em; max-width: 46vw;
+    }
+    .hit b { color: var(--ui); font-weight: 500; display: block; font-size: 15px; margin-bottom: 4px; letter-spacing: .14em; }
+    @media (max-width: 720px) {
+      .dock { width: 100%; height: auto; bottom: auto; background: linear-gradient(180deg, rgba(0,0,0,.7), transparent); }
+      .player { bottom: 5%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bg" id="bg"></div>
+    <div class="bloom" id="bloom"></div>
+    <canvas id="fx"></canvas>
+    <div class="vignette"></div>
+    <aside class="dock">
+      <h1>VOICESTREAM</h1>
+      <p>预生成背景 · 分类标签命中 · 无运行时出图</p>
+      <div class="group">
+        <h2>类别</h2>
+        <div class="chips" id="cats"></div>
+      </div>
+      <div class="group">
+        <h2>独立场景 / 特殊文件</h2>
+        <div class="chips" id="files"></div>
+      </div>
+      <div class="group">
+        <h2>常用组合</h2>
+        <div class="chips" id="mixes"></div>
+      </div>
+    </aside>
+    <div class="hit" id="hit"></div>
+    <div class="player">
+      <div class="viz" id="viz"></div>
+      <div class="bar"><i></i></div>
+      <div class="title" id="now">选择左侧标签</div>
+    </div>
+  </div>
+  <script type="module">
+    import { tagsFromPlay, matchBackground } from "./match.js";
+
+    const catalog = await fetch("./catalog.json").then((r) => r.json());
+
+    const cats = [
+      ["noise", "噪音"], ["traffic", "交通"], ["fire", "篝火"], ["rain", "雨"],
+      ["ocean", "海浪"], ["stream", "溪流"], ["night", "夜晚"], ["thunder", "雷雨"],
+    ];
+    const files = [
+      ["whitenoise", "白噪音"], ["pinknoise", "粉噪音"], ["brownnoise", "棕噪音"],
+      ["babble", "咖啡馆"], ["airplane", "飞机"], ["boat", "船"], ["bus", "公交"],
+      ["train", "火车"], ["rainonroof", "屋顶雨"], ["steam", "蒸汽"], ["quietnight", "静夜"],
+    ];
+    const mixes = [
+      { label: "雨夜壁炉", categoryIds: ["rain", "fire"] },
+      { label: "雨+夜", categoryIds: ["rain", "night"] },
+      { label: "海+雨", categoryIds: ["ocean", "rain"] },
+      { label: "海滩篝火", categoryIds: ["ocean", "fire"] },
+      { label: "雨中溪", categoryIds: ["stream", "rain"] },
+      { label: "静夜听雨", fileIds: ["quietnight"], categoryIds: ["rain"] },
+      { label: "月下溪", categoryIds: ["stream", "night"] },
+      { label: "机舱雷雨", fileIds: ["airplane"], categoryIds: ["thunder"] },
+    ];
+
+    const state = { categoryIds: [], fileIds: [] };
+
+    const catsEl = document.getElementById("cats");
+    const filesEl = document.getElementById("files");
+    const mixesEl = document.getElementById("mixes");
+
+    function chip(label, on, fn) {
+      const b = document.createElement("button");
+      b.className = "chip" + (on ? " on" : "");
+      b.textContent = label;
+      b.onclick = fn;
+      return b;
+    }
+
+    function toggle(list, id) {
+      const i = list.indexOf(id);
+      if (i >= 0) list.splice(i, 1);
+      else list.push(id);
+    }
+
+    function renderDock() {
+      catsEl.replaceChildren(...cats.map(([id, zh]) =>
+        chip(zh, state.categoryIds.includes(id), () => { toggle(state.categoryIds, id); apply(); })));
+      filesEl.replaceChildren(...files.map(([id, zh]) =>
+        chip(zh, state.fileIds.includes(id), () => { toggle(state.fileIds, id); apply(); })));
+      mixesEl.replaceChildren(...mixes.map((m) =>
+        chip(m.label, false, () => {
+          state.categoryIds = [...(m.categoryIds || [])];
+          state.fileIds = [...(m.fileIds || [])];
+          apply();
+        })));
+    }
+
+    const LIGHT = {
+      "cool-fog": ["48%", "42%", "rgba(180,200,220,.4)"],
+      "warm-shaft": ["62%", "28%", "rgba(255,170,90,.45)"],
+      "amber-dust": ["70%", "30%", "rgba(255,140,60,.4)"],
+      "warm-interior": ["40%", "18%", "rgba(255,196,110,.42)"],
+      "cabin-window": ["68%", "42%", "rgba(140,180,255,.4)"],
+      "lantern": ["72%", "62%", "rgba(255,190,80,.5)"],
+      "street-streak": ["30%", "40%", "rgba(255,160,70,.35)"],
+      "glass-bokeh": ["55%", "40%", "rgba(255,220,120,.3)"],
+      "fire-pulse": ["48%", "72%", "rgba(255,120,40,.55)"],
+      "hearth-glow": ["32%", "62%", "rgba(255,110,40,.5)"],
+      "city-streak": ["50%", "40%", "rgba(180,140,255,.28)"],
+      "canopy-shaft": ["50%", "30%", "rgba(180,220,200,.28)"],
+      "overcast": ["50%", "20%", "rgba(160,180,200,.22)"],
+      "horizon-wash": ["50%", "40%", "rgba(255,200,150,.28)"],
+      "moon-path": ["62%", "30%", "rgba(200,220,255,.38)"],
+      "leaf-caustic": ["45%", "55%", "rgba(170,230,190,.25)"],
+      "lantern-steam": ["62%", "28%", "rgba(255,170,90,.45)"],
+      "firefly-pulse": ["50%", "55%", "rgba(210,255,140,.22)"],
+      "moon-curtain": ["58%", "32%", "rgba(190,210,255,.35)"],
+      "storm-flash": ["60%", "35%", "rgba(220,230,255,.2)"],
+      "split-warm-cool": ["28%", "60%", "rgba(255,140,50,.45)"],
+      "window-lamp": ["78%", "42%", "rgba(255,200,110,.4)"],
+    };
+
+    const canvas = document.getElementById("fx");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+    let effects = [];
+    let flash = 0;
+    let t0 = performance.now();
+
+    function resize() {
+      canvas.width = innerWidth * devicePixelRatio;
+      canvas.height = innerHeight * devicePixelRatio;
+    }
+    addEventListener("resize", resize);
+    resize();
+
+    function spawnFor(effect) {
+      const w = canvas.width, h = canvas.height;
+      if (effect === "embers") {
+        particles.push({ kind: "ember", x: Math.random() * w, y: h * (0.75 + Math.random() * 0.2), vx: (Math.random() - 0.5) * 0.25, vy: -0.4 - Math.random() * 0.7, life: 1, r: 1 + Math.random() * 2 });
+      } else if (effect === "raindrops") {
+        particles.push({ kind: "rain", x: Math.random() * w, y: Math.random() * h, vy: 14 + Math.random() * 10, len: 12 + Math.random() * 18 });
+      } else if (effect === "fireflies") {
+        particles.push({ kind: "fly", x: Math.random() * w, y: Math.random() * h * 0.8, px: Math.random() * 10, life: Math.random() });
+      } else if (effect === "ripples") {
+        particles.push({ kind: "ring", x: Math.random() * w, y: h * (0.45 + Math.random() * 0.4), r: 4, life: 1 });
+      } else if (effect === "waves") {
+        /* drawn as sine bands, no particle */
+      } else if (effect === "grain") {
+        /* full-frame noise */
+      } else if (effect === "lightning") {
+        /* poisson flash */
+      } else if (effect === "parallax") {
+        particles.push({ kind: "head", x: w, y: h * (0.55 + Math.random() * 0.3), vx: -2 - Math.random() * 3, r: 8 + Math.random() * 18 });
+      }
+    }
+
+    function tick(now) {
+      const dt = Math.min(40, now - t0); t0 = now;
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      if (effects.includes("grain") && (now / 50 | 0) % 3 === 0) {
+        const n = ctx.createImageData(96, 96);
+        for (let i = 0; i < n.data.length; i += 4) {
+          const v = Math.random() * 255;
+          n.data[i] = n.data[i + 1] = n.data[i + 2] = v;
+          n.data[i + 3] = 18;
+        }
+        const pat = ctx.createPattern(bitmapFrom(n), "repeat");
+        if (pat) { ctx.globalAlpha = 0.35; ctx.fillStyle = pat; ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1; }
+      }
+
+      if (effects.includes("waves")) {
+        ctx.strokeStyle = "rgba(255,255,255,.12)";
+        ctx.lineWidth = 2 * devicePixelRatio;
+        for (let k = 0; k < 4; k++) {
+          ctx.beginPath();
+          const y0 = h * (0.62 + k * 0.07);
+          for (let x = 0; x <= w; x += 8) {
+            const y = y0 + Math.sin(x * 0.008 + now * 0.0008 + k) * (10 + k * 4) * devicePixelRatio;
+            x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+      }
+
+      if (effects.includes("lightning")) {
+        if (Math.random() < 0.002) flash = 1;
+        if (flash > 0) {
+          ctx.fillStyle = `rgba(255,255,255,${0.28 * flash})`;
+          ctx.fillRect(0, 0, w, h);
+          flash *= 0.82;
+        }
+      }
+
+      const cap = { embers: 90, raindrops: 160, fireflies: 28, ripples: 12, parallax: 18 };
+      for (const e of effects) {
+        const need = cap[e];
+        if (!need) continue;
+        const have = particles.filter((p) => (e === "embers" && p.kind === "ember") || (e === "raindrops" && p.kind === "rain") || (e === "fireflies" && p.kind === "fly") || (e === "ripples" && p.kind === "ring") || (e === "parallax" && p.kind === "head")).length;
+        if (have < need) spawnFor(e);
+      }
+
+      particles = particles.filter((p) => {
+        if (p.kind === "ember") {
+          p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt * 0.00035;
+          ctx.fillStyle = `rgba(255,${140 + Math.random() * 40},40,${0.55 * p.life})`;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * devicePixelRatio, 0, 6.3); ctx.fill();
+          return p.life > 0 && p.y > 0;
+        }
+        if (p.kind === "rain") {
+          p.y += p.vy * devicePixelRatio;
+          ctx.strokeStyle = "rgba(220,230,255,.28)";
+          ctx.lineWidth = devicePixelRatio;
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 4, p.y + p.len * devicePixelRatio); ctx.stroke();
+          if (p.y > h) p.y = -20;
+          return true;
+        }
+        if (p.kind === "fly") {
+          p.x += Math.sin(now * 0.001 + p.px) * 0.4;
+          p.y += Math.cos(now * 0.0012 + p.px) * 0.3;
+          const a = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(now * 0.004 + p.px));
+          ctx.fillStyle = `rgba(210,255,140,${a})`;
+          ctx.beginPath(); ctx.arc(p.x, p.y, 2 * devicePixelRatio, 0, 6.3); ctx.fill();
+          return true;
+        }
+        if (p.kind === "ring") {
+          p.r += dt * 0.04; p.life -= dt * 0.0005;
+          ctx.strokeStyle = `rgba(200,230,220,${0.25 * p.life})`;
+          ctx.lineWidth = devicePixelRatio;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * devicePixelRatio, 0, 6.3); ctx.stroke();
+          return p.life > 0;
+        }
+        if (p.kind === "head") {
+          p.x += p.vx * devicePixelRatio;
+          ctx.fillStyle = "rgba(255,220,140,.35)";
+          ctx.beginPath(); ctx.ellipse(p.x, p.y, p.r * devicePixelRatio, p.r * 0.4 * devicePixelRatio, 0, 0, 6.3); ctx.fill();
+          if (p.x < -40) p.x = w + 20;
+          return true;
+        }
+        return false;
+      });
+
+      requestAnimationFrame(tick);
+    }
+
+    const _bitmaps = new Map();
+    function bitmapFrom(imageData) {
+      const key = imageData;
+      const c = document.createElement("canvas");
+      c.width = imageData.width; c.height = imageData.height;
+      c.getContext("2d").putImageData(imageData, 0, 0);
+      return c;
+    }
+
+    function apply() {
+      renderDock();
+      const tags = tagsFromPlay(state, catalog);
+      const { image, score, ranked } = matchBackground(tags, catalog);
+      const bg = document.getElementById("bg");
+      bg.style.backgroundImage = `url("./${image.file}")`;
+      const bloom = document.getElementById("bloom");
+      const L = LIGHT[image.light] || ["50%", "60%", "rgba(255,255,255,.2)"];
+      bloom.style.setProperty("--lx", L[0]);
+      bloom.style.setProperty("--ly", L[1]);
+      bloom.style.setProperty("--lc", L[2]);
+      effects = image.effects || [];
+      particles = [];
+      document.getElementById("now").textContent = tags.length ? tags.join(" · ") : "选择左侧标签";
+      document.getElementById("hit").innerHTML =
+        `<b>${image.label_zh}</b>${image.id} · score ${score.toFixed(2)}<br>` +
+        ranked.filter((r) => r.score > -Infinity).map((r) => `${r.id} ${r.score.toFixed(2)}`).join(" · ");
+    }
+
+    const viz = document.getElementById("viz");
+    for (let i = 0; i < 28; i++) {
+      const s = document.createElement("span");
+      s.style.setProperty("--i", i);
+      viz.appendChild(s);
+    }
+
+    apply();
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
