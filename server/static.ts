@@ -19,8 +19,11 @@ function mimeOf(file: string): string {
 }
 
 function safeJoin(root: string, rel: string): string | null {
+  const rootResolved = path.resolve(root);
   const resolved = path.resolve(root, rel);
-  if (!resolved.startsWith(path.resolve(root))) return null;
+  if (resolved !== rootResolved && !resolved.startsWith(rootResolved + path.sep)) {
+    return null;
+  }
   return resolved;
 }
 

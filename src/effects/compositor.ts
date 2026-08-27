@@ -95,6 +95,7 @@ export class EffectCompositor {
   private glassWait = 0;
   private rippleWait = 0;
   private pulseWait = 0;
+  private bgGen = 0;
   private bgImg: HTMLImageElement | null = null;
   shake = { x: 0, y: 0, r: 0 };
 
@@ -113,6 +114,7 @@ export class EffectCompositor {
   }
 
   setBackground(url: string | null): void {
+    const gen = ++this.bgGen;
     if (!url) {
       this.bgImg = null;
       return;
@@ -120,7 +122,9 @@ export class EffectCompositor {
     const img = new Image();
     img.src = url;
     img.onload = () => {
-      this.bgImg = img;
+      if (gen === this.bgGen) {
+        this.bgImg = img;
+      }
     };
   }
 

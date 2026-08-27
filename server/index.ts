@@ -35,6 +35,16 @@ app.get("/api/mixes", (c) =>
     })),
   }),
 );
+const ULID_RE = /^[0-9A-HJKMNPQRSTVWXYZ]{26}$/i;
+
+app.use("/api/mixes/:id", async (c, next) => {
+  const id = c.req.param("id");
+  if (!id || !ULID_RE.test(id)) {
+    return c.json({ error: "invalid_id" }, 400);
+  }
+  await next();
+});
+
 app.get("/api/mixes/:id", (c) => {
   const mix = readMix(ROOT, c.req.param("id"));
   if (!mix) return c.json({ error: "not_found" }, 404);

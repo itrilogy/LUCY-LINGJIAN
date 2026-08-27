@@ -27,14 +27,14 @@ export function PlayPage() {
   const navState = (location.state ?? {}) as PlayNavState;
   const catalog = useStore((s) => s.catalog);
   const backgrounds = useStore((s) => s.backgrounds);
-  const reloaded = useRef(isReloadNavigation());
+  const reloaded = useRef(isReloadNavigation() && !navState.autoplay);
   const [mix, setMix] = useState<Mix | null>(navState.mix ?? null);
   const [snap, setSnap] = useState<EngineSnapshot>(() => {
     if (!reloaded.current) return engine.snapshot();
     const saved = readPlaySession();
     const same = saved?.path === location.pathname;
     const wasLive = Boolean(same && saved && (saved.status === "playing" || saved.status === "paused"));
-    if (wasLive || navState.autoplay) {
+    if (wasLive && !navState.autoplay) {
       engine.holdInterrupted(same && saved ? saved.sessionSec : 0);
     }
     return engine.snapshot();

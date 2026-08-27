@@ -166,7 +166,6 @@ class TrackPlayer {
       await audio.play();
       return "ok";
     } catch (e) {
-      const blocked = e instanceof DOMException && e.name === "NotAllowedError";
       audio.addEventListener(
         "canplay",
         () => {
@@ -174,7 +173,7 @@ class TrackPlayer {
         },
         { once: true },
       );
-      return blocked ? "blocked" : "pending";
+      return "pending";
     }
   }
 
@@ -370,6 +369,15 @@ export class MixEngine {
   arm(): void {
     if (!this.ctx || this.ctx.state === "closed") this.ctx = new AudioContext();
     if (this.ctx.state === "suspended") void this.ctx.resume();
+    try {
+      const silent = this.ctx.createBuffer(1, 1, 22050);
+      const src = this.ctx.createBufferSource();
+      src.buffer = silent;
+      src.connect(this.ctx.destination);
+      src.start(0);
+    } catch {
+      /* ignore kickstart error */
+    }
   }
 
   hasPlayers(): boolean {
@@ -385,14 +393,19 @@ export class MixEngine {
     this.emit();
   }
 
-  /** If the UI says playing but nothing is actually audible, fall back to paused. */
+  /** If the UI says playing but nothing is actually audible, attempt to restore or fall back to paused. */
   syncToReality(): void {
     if (this.status !== "playing") return;
     const ctx = this.ctx;
-    if (!ctx || ctx.state === "closed" || ctx.state === "suspended" || this.players.size === 0) {
+    if (!ctx || ctx.state === "closed" || this.players.size === 0) {
       this.status = "paused";
       this.pauseMark = performance.now();
       this.emit();
+      return;
+    }
+    if (ctx.state === "suspended") {
+      void ctx.resume();
+      for (const p of this.players.values()) p.ensurePlaying();
     }
   }
 
@@ -401,6 +414,9 @@ export class MixEngine {
     const sessionCarry = this.status === "paused" ? this.pausedAccum : 0;
     this.dropPlayers();
     this.mix = mix;
+    this.status = "playing";
+    this.startedAt = performance.now();
+    this.lastTickEmit = performance.now();
     const ctx = this.ctx!;
     if (this.master) this.master.disconnect();
     if (this.analyser) this.analyser.disconnect();
@@ -420,20 +436,22 @@ export class MixEngine {
       this.players.set(t.id, p);
       kicks.push(p.kick());
     }
-    if (this.players.size === 0) throw new Error("没有轨道能够开始播放");
+    if (this.players.size === 0) {
+      this.status = "idle";
+      this.emit();
+      throw new Error("没有轨道能够开始播放");
+    }
+    this.tick();
     this.emit();
     const outcomes = await Promise.all(kicks);
     this.pausedAccum = sessionCarry;
-    const audible = outcomes.some((o) => o === "ok" || o === "pending");
-    if (!audible) {
+    const allBlocked = outcomes.length > 0 && outcomes.every((o) => o === "blocked");
+    if (allBlocked) {
       this.status = "paused";
       this.pauseMark = performance.now();
       this.emit();
       return;
     }
-    this.status = "playing";
-    this.startedAt = performance.now();
-    this.tick();
   }
 
   async pause(): Promise<void> {
@@ -454,6 +472,7 @@ export class MixEngine {
     for (const p of this.players.values()) p.ensurePlaying();
     this.startedAt = performance.now();
     this.status = "playing";
+    this.lastTickEmit = performance.now();
     this.tick();
   }
 
@@ -511,8 +530,13 @@ export class MixEngine {
     this.emit();
   }
 
+  private lastTickEmit = 0;
   private tick = (): void => {
-    this.emit();
+    const now = performance.now();
+    if (now - this.lastTickEmit >= 100) {
+      this.lastTickEmit = now;
+      this.emit();
+    }
     if (this.status === "playing") this.raf = requestAnimationFrame(this.tick);
   };
 
