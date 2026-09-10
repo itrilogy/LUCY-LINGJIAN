@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "01JZG000000000000000000008",
+  "name": "寒江雪 · 飞雪",
+  "created_at": "2026-09-10T18:00:05.000Z",
+  "updated_at": "2026-09-10T18:00:05.000Z",
+  "master_volume": 0.78,
+  "tracks": [
+    {
+      "id": "01JZG00000000000000000TRKC",
+      "kind": "file",
+      "target_id": "quietnight",
+      "volume": 0.74,
+      "muted": false,
+      "fade_in_ms": 2800,
+      "fade_out_ms": 2800,
+      "loop": true
+    }
+  ],
+  "shuffle": { "avoid_last_n": 1 },
+  "visual_tags": ["snow"]
+}

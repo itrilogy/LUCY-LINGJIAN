@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "01JZG000000000000000000007",
+  "name": "壁炉 · 热浪",
+  "created_at": "2026-09-10T18:00:06.000Z",
+  "updated_at": "2026-09-10T18:00:06.000Z",
+  "master_volume": 0.8,
+  "tracks": [
+    {
+      "id": "01JZG00000000000000000TRKB",
+      "kind": "category",
+      "target_id": "fire",
+      "volume": 0.82,
+      "muted": false,
+      "fade_in_ms": 1600,
+      "fade_out_ms": 1600,
+      "loop": true
+    }
+  ],
+  "shuffle": { "avoid_last_n": 1 }
+}

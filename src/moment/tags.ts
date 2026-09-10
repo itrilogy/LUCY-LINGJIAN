@@ -37,12 +37,12 @@ function weatherSpec(code: number | null): WxSpec {
   if (code === 0) return { kind: "clear", zh: "晴朗", tags: ["outdoor", "nature"], sound: [] };
   if (code <= 3) return { kind: "cloudy", zh: "多云", tags: ["cool", "outdoor"], sound: ["stream"] };
   if (code === 45 || code === 48) return { kind: "fog", zh: "雾", tags: ["cool", "indoor", "mist"], sound: ["brown", "steam"] };
-  if (code >= 51 && code <= 57) return { kind: "drizzle", zh: "毛毛雨", tags: ["cool", "indoor"], sound: ["rain", "rainonroof"] };
+  if (code >= 51 && code <= 57) return { kind: "drizzle", zh: "毛毛雨", tags: ["cool", "indoor", "drizzle"], sound: ["rain", "rainonroof"] };
   if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) {
     return { kind: "rain", zh: "雨", tags: ["cool", "indoor", "rain"], sound: ["rain", "rainonroof"] };
   }
   if ((code >= 71 && code <= 77) || code === 85 || code === 86) {
-    return { kind: "snow", zh: "雪", tags: ["cool", "nature", "indoor"], sound: ["white", "quietnight"] };
+    return { kind: "snow", zh: "雪", tags: ["cool", "nature", "indoor", "snow"], sound: ["white", "quietnight"] };
   }
   if (code >= 95) return { kind: "storm", zh: "雷暴", tags: ["storm", "indoor", "cool"], sound: ["thunder", "rain"] };
   return { kind: "cloudy", zh: "阴", tags: ["cool"], sound: ["stream"] };
@@ -124,4 +124,6 @@ export const TAG_LABEL_ZH: Record<string, string> = {
   warm: "暖",
   cool: "凉",
   mist: "雾",
+  drizzle: "毛毛雨",
+  snow: "雪",
 };

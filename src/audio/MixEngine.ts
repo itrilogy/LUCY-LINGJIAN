@@ -5,6 +5,7 @@ import {
   type CatalogFile,
 } from "../../shared/catalog";
 import type { Mix, MixTrack } from "../../shared/mixSchema";
+import type { VisualBands } from "../effects/OverlayGL";
 import { mulberry32, pickNext } from "./shuffle";
 import { volumeToGain } from "./volume";
 
@@ -328,6 +329,7 @@ export class MixEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   analyser: AnalyserNode | null = null;
+  private thunderAnalyser: AnalyserNode | null = null;
   private players = new Map<string, TrackPlayer>();
   private mix: Mix | null = null;
   private status: EngineStatus = "idle";
@@ -336,6 +338,10 @@ export class MixEngine {
   private pauseMark = 0;
   private listeners = new Set<Listener>();
   private raf = 0;
+  private freqData = new Uint8Array(128);
+  private timeData = new Uint8Array(256);
+  private thunderTime = new Uint8Array(256);
+  private bands: VisualBands = { bass: 0, mid: 0, treble: 0, rms: 0, thunder: 0 };
 
   subscribe(fn: Listener): () => void {
     this.listeners.add(fn);
@@ -436,6 +442,7 @@ export class MixEngine {
       this.players.set(t.id, p);
       kicks.push(p.kick());
     }
+    this.attachThunderAnalyser(catalog);
     if (this.players.size === 0) {
       this.status = "idle";
       this.emit();
@@ -511,8 +518,73 @@ export class MixEngine {
     this.emit();
   }
 
+  visualBands(): VisualBands {
+    const a = this.analyser;
+    if (!a || this.status !== "playing") {
+      this.bands.bass *= 0.88;
+      this.bands.mid *= 0.88;
+      this.bands.treble *= 0.88;
+      this.bands.rms *= 0.88;
+      this.bands.thunder *= 0.88;
+      return this.bands;
+    }
+    if (this.freqData.length !== a.frequencyBinCount) this.freqData = new Uint8Array(a.frequencyBinCount);
+    if (this.timeData.length !== a.fftSize) this.timeData = new Uint8Array(a.fftSize);
+    a.getByteFrequencyData(this.freqData);
+    a.getByteTimeDomainData(this.timeData);
+    const bass = bandEnergy(this.freqData, 0, 3);
+    const mid = bandEnergy(this.freqData, 5, 18);
+    const treble = bandEnergy(this.freqData, 22, this.freqData.length);
+    let rms = 0;
+    for (let i = 0; i < this.timeData.length; i++) {
+      const v = (this.timeData[i]! - 128) / 128;
+      rms += v * v;
+    }
+    rms = Math.sqrt(rms / this.timeData.length);
+    this.bands.bass += (bass - this.bands.bass) * 0.18;
+    this.bands.mid += (mid - this.bands.mid) * 0.14;
+    this.bands.treble += (treble - this.bands.treble) * 0.16;
+    this.bands.rms += (rms - this.bands.rms) * 0.2;
+    let thunder = this.bands.thunder;
+    const ta = this.thunderAnalyser;
+    if (ta) {
+      if (this.thunderTime.length !== ta.fftSize) this.thunderTime = new Uint8Array(ta.fftSize);
+      ta.getByteTimeDomainData(this.thunderTime);
+      let peak = 0;
+      for (let i = 0; i < this.thunderTime.length; i++) {
+        peak = Math.max(peak, Math.abs(this.thunderTime[i]! - 128) / 128);
+      }
+      thunder += (peak - thunder) * (peak > thunder ? 0.5 : 0.12);
+    } else {
+      thunder *= 0.9;
+    }
+    this.bands.thunder = thunder;
+    return this.bands;
+  }
+
+  private attachThunderAnalyser(catalog: Catalog): void {
+    this.thunderAnalyser?.disconnect();
+    this.thunderAnalyser = null;
+    const ctx = this.ctx;
+    if (!ctx) return;
+    for (const p of this.players.values()) {
+      const t = p.track;
+      if (t.muted || t.volume < 0.02) continue;
+      const thunder =
+        t.target_id === "thunder" || fileById(catalog, t.target_id)?.category === "thunder";
+      if (!thunder) continue;
+      const node = ctx.createAnalyser();
+      node.fftSize = 256;
+      p.trackGain.connect(node);
+      this.thunderAnalyser = node;
+      break;
+    }
+  }
+
   private dropPlayers(): void {
     if (this.raf) cancelAnimationFrame(this.raf);
+    this.thunderAnalyser?.disconnect();
+    this.thunderAnalyser = null;
     for (const p of this.players.values()) p.pause();
     this.players.clear();
   }
@@ -526,6 +598,7 @@ export class MixEngine {
     this.ctx = null;
     this.master = null;
     this.analyser = null;
+    this.thunderAnalyser = null;
     this.status = "idle";
     this.emit();
   }
@@ -556,4 +629,13 @@ function hash(s: string): number {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function bandEnergy(data: Uint8Array, lo: number, hi: number): number {
+  const end = Math.min(hi, data.length);
+  const start = Math.max(0, lo);
+  if (end <= start) return 0;
+  let s = 0;
+  for (let i = start; i < end; i++) s += data[i]!;
+  return s / (255 * (end - start));
 }

@@ -77,17 +77,14 @@ export function deleteMix(root: string, id: string): boolean {
 
 export function seedPresets(root: string): void {
   ensureMixRoot(root);
-  const userDir = path.join(root, "data/mixes");
-  const existing = readdirSync(userDir, { withFileTypes: true }).filter(
-    (d) => d.isDirectory() && !d.name.startsWith("."),
-  );
-  if (existing.length > 0) return;
   const presets = path.join(root, "data/presets");
   if (!existsSync(presets)) return;
   for (const name of readdirSync(presets)) {
     if (!name.endsWith(".json") || name.startsWith(".")) continue;
     try {
       const mix = MixSchema.parse(JSON.parse(readFileSync(path.join(presets, name), "utf8")));
+      const dest = path.join(mixDir(root, mix.id), "mix.json");
+      if (existsSync(dest)) continue;
       writeMix(root, mix);
     } catch (e) {
       console.warn("seedPreset failed for", name, e);

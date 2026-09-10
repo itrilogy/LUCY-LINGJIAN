@@ -140,7 +140,7 @@ export class EffectCompositor {
   }
 
   resize(): void {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
     this.canvas.width = Math.floor(this.canvas.clientWidth * dpr);
     this.canvas.height = Math.floor(this.canvas.clientHeight * dpr);
   }
@@ -650,9 +650,13 @@ export class EffectCompositor {
     if (this.effects.includes("lightning")) {
       if (Math.random() < 0.0022) this.flash = 1;
       if (this.flash > 0) {
-        ctx.fillStyle = `rgba(255,255,255,${0.3 * this.flash})`;
+        const sky = ctx.createLinearGradient(0, 0, 0, h);
+        sky.addColorStop(0, `rgba(210,225,255,${0.32 * this.flash})`);
+        sky.addColorStop(0.42, `rgba(180,200,230,${0.08 * this.flash})`);
+        sky.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = sky;
         ctx.fillRect(0, 0, w, h);
-        this.flash *= 0.8;
+        this.flash *= 0.78;
       }
     }
 

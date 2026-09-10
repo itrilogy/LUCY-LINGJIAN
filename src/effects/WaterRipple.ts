@@ -1,18 +1,5 @@
-async function decodeBg(url: string): Promise<HTMLImageElement> {
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = url;
-  await img.decode();
-  return img;
-}
-
-const VERT = `#version 300 es
-in vec2 aPos;
-out vec2 vUv;
-void main() {
-  vUv = aPos * 0.5 + 0.5;
-  gl_Position = vec4(aPos, 0.0, 1.0);
-}`;
+import { compile, coverDraw, decodeBg, QUAD_VERT } from "./glutil";
+import type { VisualBands } from "./OverlayGL";
 
 const FRAG = `#version 300 es
 precision highp float;
@@ -21,16 +8,19 @@ uniform vec2 uRes;
 uniform float uTime;
 uniform vec4 uRipples[20];
 uniform int uCount;
+uniform float uIntensity;
+uniform float uBass;
 in vec2 vUv;
 out vec4 fragColor;
 
 void main() {
   float aspect = uRes.x / max(uRes.y, 1.0);
   vec2 p = vec2(vUv.x * aspect, vUv.y);
+  float drive = 0.72 + uIntensity * 0.38 + uBass * 0.28;
   vec2 deriv = vec2(
     sin(p.x * 5.4 + uTime * 0.28) * 0.55 + sin(p.y * 8.1 - uTime * 0.19) * 0.38,
     cos(p.x * 4.6 - uTime * 0.16) * 0.42 + sin(p.y * 6.8 + uTime * 0.24) * 0.5
-  ) * 0.0075;
+  ) * 0.0075 * drive;
   for (int i = 0; i < 20; i++) {
     if (i >= uCount) break;
     vec4 rp = uRipples[i];
@@ -38,7 +28,7 @@ void main() {
     if (t < 0.0 || t > 6.4) continue;
     vec2 c = vec2(rp.x * aspect, rp.y);
     float d = distance(p, c);
-    float env = rp.w * exp(-t * 0.72) * exp(-d * 2.6) * smoothstep(0.0, 0.14, t);
+    float env = rp.w * exp(-t * 0.72) * exp(-d * 2.6) * smoothstep(0.0, 0.14, t) * uIntensity;
     float phase = d * 42.0 - t * 4.6;
     vec2 dir = (p - c) / max(d, 0.0008);
     deriv += dir * sin(phase) * env * 0.055;
@@ -52,50 +42,12 @@ void main() {
   float ndl = clamp(dot(n, L), 0.0, 1.0);
   col *= 0.7 + 0.42 * ndl;
   float cau = sin((uv.x + deriv.x) * 36.0 + uTime * 0.38) * sin((uv.y + deriv.y) * 28.0 - uTime * 0.3);
-  col += col * cau * (0.07 + 0.08 * ndl);
+  col += col * cau * (0.07 + 0.08 * ndl) * mix(0.55, 1.15, uBass);
   vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
   float spec = pow(max(dot(n, H), 0.0), 72.0);
-  col += col * spec * 0.16;
+  col += col * spec * 0.16 * uIntensity;
   fragColor = vec4(col, 1.0);
 }`;
-
-function compile(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
-  const sh = gl.createShader(type)!;
-  gl.shaderSource(sh, src);
-  gl.compileShader(sh);
-  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
-    const log = gl.getShaderInfoLog(sh);
-    gl.deleteShader(sh);
-    throw new Error(log ?? "shader");
-  }
-  return sh;
-}
-
-function coverDraw(img: HTMLImageElement, w: number, h: number): HTMLCanvasElement {
-  const oc = document.createElement("canvas");
-  oc.width = w;
-  oc.height = h;
-  const ctx = oc.getContext("2d")!;
-  const ir = img.naturalWidth / img.naturalHeight;
-  const cr = w / h;
-  let dw: number;
-  let dh: number;
-  let ox: number;
-  let oy: number;
-  if (ir > cr) {
-    dh = h;
-    dw = h * ir;
-    ox = (w - dw) / 2;
-    oy = 0;
-  } else {
-    dw = w;
-    dh = w / ir;
-    ox = 0;
-    oy = (h - dh) / 2;
-  }
-  ctx.drawImage(img, ox, oy, dw, dh);
-  return oc;
-}
 
 type Drop = { x: number; y: number; t0: number; amp: number };
 
@@ -123,12 +75,22 @@ export class WaterRipple {
   private next = 0;
   private gen = 0;
   private img: HTMLImageElement | null = null;
+  private intensity = 1;
+  private bands: VisualBands = { bass: 0, mid: 0, treble: 0, rms: 0, thunder: 0 };
 
   constructor(private canvas: HTMLCanvasElement) {
     this.canvas.style.opacity = "0";
   }
 
-  async setScene(url: string | null): Promise<boolean> {
+  setBands(b: VisualBands): void {
+    this.bands = b;
+  }
+
+  setIntensity(n: number): void {
+    this.intensity = Math.max(0.15, Math.min(1.2, n));
+  }
+
+  async setScene(url: string | null, intensity = 1): Promise<boolean> {
     const gen = ++this.gen;
     if (!url) {
       this.stop();
@@ -144,6 +106,7 @@ export class WaterRipple {
       this.fit();
       this.boot();
       this.img = img;
+      this.intensity = Math.max(0.15, Math.min(1.2, intensity));
       this.upload(img);
       const first = sampleRippleBeat();
       this.drops = [
@@ -206,7 +169,7 @@ export class WaterRipple {
     const gl = this.canvas.getContext("webgl2", { alpha: false, premultipliedAlpha: false, antialias: true });
     if (!gl) throw new Error("webgl2");
     this.gl = gl;
-    const vs = compile(gl, gl.VERTEX_SHADER, VERT);
+    const vs = compile(gl, gl.VERTEX_SHADER, QUAD_VERT);
     const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
     const prog = gl.createProgram()!;
     gl.attachShader(prog, vs);
@@ -227,6 +190,8 @@ export class WaterRipple {
       uTime: gl.getUniformLocation(prog, "uTime"),
       uRipples: gl.getUniformLocation(prog, "uRipples") ?? gl.getUniformLocation(prog, "uRipples[0]"),
       uCount: gl.getUniformLocation(prog, "uCount"),
+      uIntensity: gl.getUniformLocation(prog, "uIntensity"),
+      uBass: gl.getUniformLocation(prog, "uBass"),
     };
     this.canvas.addEventListener("webglcontextlost", (e) => {
       e.preventDefault();
@@ -268,7 +233,7 @@ export class WaterRipple {
           return;
         }
       }
-      if (this.gl) this.draw(now);
+      if (this.gl && !document.hidden) this.draw(now);
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);
@@ -319,6 +284,8 @@ export class WaterRipple {
     gl.uniform1f(this.loc.uTime, t);
     gl.uniform1i(this.loc.uCount, n);
     gl.uniform4fv(this.loc.uRipples, data);
+    gl.uniform1f(this.loc.uIntensity, this.intensity);
+    gl.uniform1f(this.loc.uBass, this.bands.bass);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 }

@@ -14,15 +14,15 @@
     html, body { margin: 0; height: 100%; background: #07080a; color: var(--ui); font: 13px/1.45 "Songti SC", "Source Han Serif SC", Georgia, serif; }
     .stage { position: fixed; inset: 0; overflow: hidden; }
     .bg {
-      position: absolute; inset: -6%;
+      position: absolute; inset: -3.2%;
       background: #0a0a0c center / cover no-repeat;
-      transform-origin: 50% 45%;
-      animation: ken 48s ease-in-out infinite alternate;
+      transform-origin: 50% 42%;
+      animation: ken 76s ease-in-out infinite alternate;
       filter: saturate(0.92) contrast(1.04);
     }
     @keyframes ken {
-      from { transform: scale(1); }
-      to { transform: scale(1.08) translate3d(-1.2%, -0.6%, 0); }
+      from { transform: scale(1.012); }
+      to { transform: scale(1.042) translate3d(-0.4%, -0.25%, 0); }
     }
     canvas#fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     .vignette {

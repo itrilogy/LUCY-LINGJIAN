@@ -4,9 +4,11 @@ import type { Catalog } from "../../shared/catalog";
 import type { Mix, MixTrack } from "../../shared/mixSchema";
 import { fetchMix, fetchPoetry } from "../api/client";
 import { engine, type EngineSnapshot } from "../audio/MixEngine";
-import { effectsFromTags, matchBackground, tagsFromPlay } from "../backgrounds/match";
+import { matchBackground, tagsFromPlay } from "../backgrounds/match";
 import { EffectCompositor, LIGHT } from "../effects/compositor";
+import { OverlayGL } from "../effects/OverlayGL";
 import { attachRainGlass, detachRainGlass, type RainGlass } from "../effects/RainGlass";
+import { planVisual, seatLabel, visualKey } from "../effects/seats";
 import { WaterRipple } from "../effects/WaterRipple";
 import { formatPct } from "../audio/volume";
 import { BRAND } from "../brand";
@@ -50,10 +52,15 @@ export function PlayPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glassSlotRef = useRef<HTMLDivElement>(null);
   const waterCanvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const fxRef = useRef<EffectCompositor | null>(null);
   const rainRef = useRef<RainGlass | null>(null);
   const waterRef = useRef<WaterRipple | null>(null);
+  const overlayRef = useRef<OverlayGL | null>(null);
   const bgRef = useRef<HTMLDivElement>(null);
+  const [reduced, setReduced] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 
   useEffect(() => {
     const unsub = engine.subscribe((s) => {
@@ -147,7 +154,7 @@ export function PlayPage() {
               ...(fileIds.includes("quietnight") ? ["quietnight"] : []),
               ...(fileIds.includes("drive") ? ["drive"] : []),
             ],
-            extra: momentTags,
+            extra: [...momentTags, ...(mix.visual_tags ?? [])],
           },
           backgrounds,
         )
@@ -164,19 +171,30 @@ export function PlayPage() {
     });
   }, [mix, backgrounds, playHint]);
 
-  const playTags = useMemo(() => {
-    const tags = [...playHint.tags];
-    if (bg) tags.push(...bg.tags);
-    return [...new Set(tags)];
-  }, [playHint, bg]);
+  const playTags = playHint.tags;
 
-  const playEffects = useMemo(
-    () => effectsFromTags(playHint.tags, bg?.effects ?? []),
-    [playHint, bg],
+  const visual = useMemo(
+    () =>
+      planVisual({
+        tags: playHint.tags,
+        stillEffects: bg?.effects ?? [],
+        tracks: mix?.tracks ?? [],
+        catalog,
+        reducedMotion: reduced,
+      }),
+    [playHint.tags, bg, mix, catalog, reduced],
   );
-  const fxKey = playEffects.join("|");
+  const playEffects = visual.particles;
+  const fxKey = visualKey(visual);
 
   const verse = useVerseCycle(quotes, soundMap, playTags, true, dwellSec, mix?.id ?? "");
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const on = () => setReduced(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -189,10 +207,13 @@ export function PlayPage() {
     if (slot) rainRef.current = attachRainGlass(slot);
     const waterCanvas = waterCanvasRef.current;
     if (waterCanvas) waterRef.current = new WaterRipple(waterCanvas);
+    const overlayCanvas = overlayCanvasRef.current;
+    if (overlayCanvas) overlayRef.current = new OverlayGL(overlayCanvas);
     const onResize = () => {
       fx.resize();
       rainRef.current?.resize();
       waterRef.current?.resize();
+      overlayRef.current?.resize();
     };
     requestAnimationFrame(onResize);
     fx.start();
@@ -204,49 +225,73 @@ export function PlayPage() {
       rainRef.current = null;
       waterRef.current?.destroy();
       waterRef.current = null;
+      overlayRef.current?.destroy();
+      overlayRef.current = null;
     };
   }, []);
 
   useEffect(() => {
     const effects = playEffects;
     const url = bg ? `/backgrounds/${bg.file}` : null;
-    const wantGlass = effects.includes("raindrops");
-    const wantWater = effects.includes("ripples") && !wantGlass;
-    const storm = effects.includes("lightning");
+    const wantGlass = visual.glass != null;
+    const wantWater = visual.water > 0.02 && !wantGlass;
+    const storm = visual.glass === "storm";
     let cancelled = false;
+    fxRef.current?.setBackground(url);
+    overlayRef.current?.setLight(...lightUv(bg?.light));
 
-    const apply2d = (glassOk: boolean, waterOk: boolean) => {
+    const apply2d = (glassOk: boolean, waterOk: boolean, overlayOk: boolean) => {
       if (cancelled) return;
       fxRef.current?.resize();
+      const extra: string[] = [];
+      if (visual.overlay === "storm" && !overlayOk && !effects.includes("lightning")) extra.push("lightning");
+      if (visual.overlay === "grain" && !overlayOk && !effects.includes("grain")) extra.push("grain");
       fxRef.current?.setEffects(
-        effects.filter((e) => {
+        [...effects, ...extra].filter((e) => {
           if (e === "raindrops" && glassOk) return false;
           if (e === "ripples" && waterOk) return false;
+          if (e === "lightning" && overlayOk && visual.overlay === "storm") return false;
           return true;
         }),
       );
     };
 
-    apply2d(false, false);
+    apply2d(false, false, false);
 
     void (async () => {
       const rain = rainRef.current;
       const water = waterRef.current;
+      const overlay = overlayRef.current;
       const glassOk = wantGlass && url ? Boolean(await rain?.setScene(url, storm ? "storm" : "rain")) : false;
       if (cancelled) return;
       if (!wantGlass || !glassOk) await rain?.setScene(null);
       if (cancelled) return;
-      const waterOk = wantWater && url ? Boolean(await water?.setScene(url)) : false;
+      const waterOk = wantWater && url ? Boolean(await water?.setScene(url, visual.water)) : false;
       if (cancelled) return;
       if (!wantWater || !waterOk) await water?.setScene(null);
+      else water?.setIntensity(visual.water);
       if (cancelled) return;
-      apply2d(glassOk, waterOk);
+      const surface = glassOk || waterOk;
+      let kind = visual.overlay;
+      if (surface && (kind === "haze" || kind === "mist")) kind = "none";
+      const overlayOk =
+        kind !== "none" && url
+          ? Boolean(
+              await overlay?.setScene(url, kind, visual.overlayIntensity, {
+                refract: !(surface && (kind === "heat" || kind === "moon")),
+              }),
+            )
+          : false;
+      if (cancelled) return;
+      if (!overlayOk) await overlay?.setScene(null, "none", 0);
+      if (cancelled) return;
+      apply2d(glassOk, waterOk, overlayOk);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [bg, fxKey, playEffects]);
+  }, [bg, fxKey, playEffects, visual]);
 
   useEffect(() => {
     let raf = 0;
@@ -258,6 +303,9 @@ export function PlayPage() {
         el.style.setProperty("--sy", `${s.y}px`);
         el.style.setProperty("--sr", `${s.r}deg`);
       }
+      const bands = engine.visualBands();
+      overlayRef.current?.setBands(bands);
+      waterRef.current?.setBands(bands);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -346,22 +394,23 @@ export function PlayPage() {
   });
 
   return (
-    <div className="play">
+    <div className={"play" + (reduced ? " reduce-motion" : "")}>
       <div className="stage" aria-hidden>
-        <div className="bg-wrap">
+        <div className="scene">
           <div
             className={"bg" + (playEffects.includes("grain") ? " grain" : "")}
             ref={bgRef}
             style={{ backgroundImage: bg ? `url(/backgrounds/${bg.file})` : undefined }}
           />
+          <div ref={glassSlotRef} className="fx-glass-slot" />
+          <canvas ref={waterCanvasRef} className="fx-glass fx-water" />
+          <canvas ref={overlayCanvasRef} className="fx-overlay" />
+          <canvas ref={canvasRef} className="fx" />
         </div>
         <div
           className="bloom"
           style={{ ["--lx" as string]: light[0], ["--ly" as string]: light[1], ["--lc" as string]: light[2] }}
         />
-        <div ref={glassSlotRef} className="fx-glass-slot" />
-        <canvas ref={waterCanvasRef} className="fx-glass fx-water" />
-        <canvas ref={canvasRef} className="fx" />
         <div className="vignette" />
       </div>
       {verse.quote && (
@@ -377,7 +426,7 @@ export function PlayPage() {
       <header>
         <button type="button" onClick={() => { void engine.stop(250); nav("/"); }}>← 曲库</button>
         <b>{mix?.name ?? "…"}</b>
-        <span>{bg?.label_zh}</span>
+        <span>{[bg?.label_zh, seatLabel(visual)].filter(Boolean).join(" · ")}</span>
       </header>
       <div className="now">
         {nowRows.map((c) => (
@@ -462,6 +511,14 @@ export function PlayPage() {
   );
 }
 
+function lightUv(id: string | undefined): [number, number] {
+  const row = LIGHT[id ?? ""];
+  if (!row) return [0.52, 0.78];
+  const x = Number.parseFloat(row[0] ?? "50") / 100;
+  const top = Number.parseFloat(row[1] ?? "30") / 100;
+  return [Number.isFinite(x) ? x : 0.52, Number.isFinite(top) ? 1 - top : 0.78];
+}
+
 function mixRows(mix: Mix | null, snap: EngineSnapshot, catalog: Catalog | null) {
   if (snap.current.length > 0) {
     return snap.current.map((c) => ({
@@ -503,10 +560,12 @@ const playCss = `
   position: absolute; inset: 0; z-index: 40; pointer-events: none;
 }
 .hud header, .hud .now, .hud .dock { pointer-events: auto; }
-.bg-wrap {
-  position: absolute; inset: -10%;
-  animation: ken 48s ease-in-out infinite alternate;
+.scene {
+  position: absolute; inset: -3.2%;
+  transform-origin: 50% 42%;
+  animation: ken 76s ease-in-out infinite alternate;
 }
+.play.reduce-motion .scene { animation: none; inset: 0; }
 .bg {
   position: absolute; inset: 0;
   background: #0a0a0c center / cover no-repeat;
@@ -519,22 +578,24 @@ const playCss = `
   background-image: repeating-radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 1px 3px);
   mix-blend-mode: overlay; animation: grain 0.4s steps(2) infinite;
 }
-@keyframes ken { from { transform: scale(1); } to { transform: scale(1.08) translate3d(-1.2%, -.5%, 0); } }
+@keyframes ken { from { transform: scale(1.012); } to { transform: scale(1.042) translate3d(-0.4%, -.25%, 0); } }
 @keyframes grain { from { transform: translate(0,0); } to { transform: translate(-2%, 1%); } }
-.fx-glass-slot, .fx-glass {
+.fx-glass-slot, .fx-glass, .fx-overlay, .fx {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  pointer-events: none; z-index: 0;
+  pointer-events: none;
 }
+.fx-glass-slot, .fx-glass { z-index: 0; }
+.fx-overlay { z-index: 1; opacity: 0; transition: opacity .45s ease; }
 .fx-glass { opacity: 0; transition: opacity .4s ease; }
-.fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+.fx { z-index: 2; }
 .vignette {
-  position: absolute; inset: 0; pointer-events: none;
+  position: absolute; inset: 0; pointer-events: none; z-index: 3;
   background:
     radial-gradient(ellipse at 50% 40%, transparent 42%, rgba(0,0,0,.4) 100%),
     linear-gradient(180deg, rgba(0,0,0,.22) 0%, transparent 24%, transparent 62%, rgba(0,0,0,.62) 100%);
 }
 .bloom {
-  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+  position: absolute; inset: 0; pointer-events: none; z-index: 3; mix-blend-mode: screen;
   background: radial-gradient(ellipse at var(--lx,50%) var(--ly,70%), var(--lc, rgba(255,180,80,.35)), transparent 55%);
   animation: breathe 6.4s ease-in-out infinite;
 }

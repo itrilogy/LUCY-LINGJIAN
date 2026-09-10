@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "01JZG000000000000000000004",
+  "name": "原野雷雨 · 闪空",
+  "created_at": "2026-09-10T18:00:09.000Z",
+  "updated_at": "2026-09-10T18:00:09.000Z",
+  "master_volume": 0.82,
+  "tracks": [
+    {
+      "id": "01JZG00000000000000000TRK6",
+      "kind": "category",
+      "target_id": "rain",
+      "volume": 0.72,
+      "muted": false,
+      "fade_in_ms": 1800,
+      "fade_out_ms": 1800,
+      "loop": true
+    },
+    {
+      "id": "01JZG00000000000000000TRK7",
+      "kind": "category",
+      "target_id": "thunder",
+      "volume": 0.78,
+      "muted": false,
+      "fade_in_ms": 1200,
+      "fade_out_ms": 1600,
+      "loop": true
+    }
+  ],
+  "shuffle": { "avoid_last_n": 1 }
+}

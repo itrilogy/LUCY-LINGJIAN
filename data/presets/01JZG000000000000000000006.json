@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "01JZG000000000000000000006",
+  "name": "月下海 · 水月",
+  "created_at": "2026-09-10T18:00:07.000Z",
+  "updated_at": "2026-09-10T18:00:07.000Z",
+  "master_volume": 0.8,
+  "tracks": [
+    {
+      "id": "01JZG00000000000000000TRK9",
+      "kind": "category",
+      "target_id": "ocean",
+      "volume": 0.78,
+      "muted": false,
+      "fade_in_ms": 2400,
+      "fade_out_ms": 2400,
+      "loop": true
+    },
+    {
+      "id": "01JZG00000000000000000TRKA",
+      "kind": "category",
+      "target_id": "night",
+      "volume": 0.48,
+      "muted": false,
+      "fade_in_ms": 3600,
+      "fade_out_ms": 3600,
+      "loop": true
+    }
+  ],
+  "shuffle": { "avoid_last_n": 1 }
+}

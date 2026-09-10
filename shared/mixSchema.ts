@@ -28,6 +28,8 @@ export const MixSchema = z.object({
     })
     .strict()
     .default({ avoid_last_n: 1 }),
+  /** Extra scene tags (dawn, snow, …) that sound tracks cannot express. */
+  visual_tags: z.array(z.string().min(1)).max(8).optional(),
 }).strict();
 
 export type Mix = z.infer<typeof MixSchema>;

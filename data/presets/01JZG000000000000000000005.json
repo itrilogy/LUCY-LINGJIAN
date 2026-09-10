@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "01JZG000000000000000000005",
+  "name": "蒸汽汤屋 · 岚烟",
+  "created_at": "2026-09-10T18:00:08.000Z",
+  "updated_at": "2026-09-10T18:00:08.000Z",
+  "master_volume": 0.8,
+  "tracks": [
+    {
+      "id": "01JZG00000000000000000TRK8",
+      "kind": "file",
+      "target_id": "steam",
+      "volume": 0.8,
+      "muted": false,
+      "fade_in_ms": 2200,
+      "fade_out_ms": 2200,
+      "loop": true
+    }
+  ],
+  "shuffle": { "avoid_last_n": 1 }
+}
