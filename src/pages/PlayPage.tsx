@@ -49,6 +49,11 @@ export function PlayPage() {
     return Number.isFinite(n) && n >= 6 && n <= 60 ? n : 16;
   });
   const [about, setAbout] = useState(false);
+  const [idle, setIdle] = useState(false);
+  const [topHot, setTopHot] = useState(false);
+  const [advanced, setAdvanced] = useState(false);
+  const [fxOn, setFxOn] = useState(true);
+  const lastMaster = useRef(0.8);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glassSlotRef = useRef<HTMLDivElement>(null);
   const waterCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -197,6 +202,24 @@ export function PlayPage() {
   }, []);
 
   useEffect(() => {
+    let timer = 0;
+    const bump = (e?: Event) => {
+      setIdle(false);
+      if (e instanceof PointerEvent) setTopHot(e.clientY < 48);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setIdle(true), 2000);
+    };
+    bump();
+    window.addEventListener("pointermove", bump);
+    window.addEventListener("keydown", bump);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("pointermove", bump);
+      window.removeEventListener("keydown", bump);
+    };
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -256,6 +279,16 @@ export function PlayPage() {
       );
     };
 
+    if (!fxOn) {
+      fxRef.current?.setEffects([]);
+      void rainRef.current?.setScene(null);
+      void waterRef.current?.setScene(null);
+      void overlayRef.current?.setScene(null, "none", 0);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     apply2d(false, false, false);
 
     void (async () => {
@@ -291,7 +324,7 @@ export function PlayPage() {
     return () => {
       cancelled = true;
     };
-  }, [bg, fxKey, playEffects, visual]);
+  }, [bg, fxKey, playEffects, visual, fxOn]);
 
   useEffect(() => {
     let raf = 0;
@@ -351,7 +384,7 @@ export function PlayPage() {
   const hours = Math.floor(snap.sessionSec / 3600);
   const mins = Math.floor((snap.sessionSec % 3600) / 60);
   const secs = Math.floor(snap.sessionSec % 60);
-  const clock = `${hours > 0 ? hours + ":" : ""}${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  const clock = `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
   const toggle = () => {
     if (!mix || !catalog) return;
@@ -387,18 +420,41 @@ export function PlayPage() {
         nav("/");
       } else if (e.code === "ArrowRight") {
         void engine.skip();
+      } else if (e.code === "KeyM") {
+        const live = engine.snapshot();
+        if (live.master > 0) {
+          lastMaster.current = live.master;
+          engine.setMaster(0);
+        } else {
+          engine.setMaster(lastMaster.current || 0.8);
+        }
+      } else if (e.code === "ArrowUp") {
+        e.preventDefault();
+        const live = engine.snapshot();
+        engine.setMaster(Math.min(1, live.master + 0.05));
+      } else if (e.code === "ArrowDown") {
+        e.preventDefault();
+        const live = engine.snapshot();
+        engine.setMaster(Math.max(0, live.master - 0.05));
+      } else if (e.code === "KeyF") {
+        setFxOn((v) => !v);
+      } else if (e.code === "ShiftLeft" || e.code === "ShiftRight") {
+        if (!e.repeat) setAdvanced((v) => !v);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
 
+  const playing = snap.status === "playing";
+  const playLabel = playing ? "暂停" : snap.status === "paused" ? "继续" : "播放";
+
   return (
-    <div className={"play" + (reduced ? " reduce-motion" : "")}>
+    <div className={"play" + (reduced ? " reduce-motion" : "") + (fxOn ? "" : " fx-off") + (idle ? " idle" : "") + (topHot ? " top-hot" : "") + (advanced ? " advanced" : "")}>
       <div className="stage" aria-hidden>
         <div className="scene">
           <div
-            className={"bg" + (playEffects.includes("grain") ? " grain" : "")}
+            className={"bg" + (playEffects.includes("grain") && fxOn ? " grain" : "")}
             ref={bgRef}
             style={{ backgroundImage: bg ? `url(/backgrounds/${bg.file})` : undefined }}
           />
@@ -423,8 +479,8 @@ export function PlayPage() {
         />
       )}
       <div className="hud">
-      <header>
-        <button type="button" onClick={() => { void engine.stop(250); nav("/"); }}>← 曲库</button>
+      <header className="play-bar">
+        <button type="button" className="btn btn-ghost" onClick={() => { void engine.stop(250); nav("/"); }}>曲库</button>
         <b>{mix?.name ?? "…"}</b>
         <span>{[bg?.label_zh, seatLabel(visual)].filter(Boolean).join(" · ")}</span>
       </header>
@@ -456,18 +512,21 @@ export function PlayPage() {
       </div>
       <div className="dock">
         {err && <p className="err">{err}</p>}
-        <div className="clock">{clock}<span>循环中 · 无时限</span></div>
+        <div className="clock">{clock}<span>会话计时 · 无时限</span></div>
         <div className="controls">
-          <button type="button" className="ghost" onClick={() => { void engine.stop(250); nav("/"); }}>停止</button>
-          <button type="button" className="playbtn" onClick={() => void toggle()}>
-            {snap.status === "playing" ? "暂停" : snap.status === "paused" ? "继续" : "播放"}
+          <button type="button" className="btn btn-ghost" onClick={() => { void engine.stop(250); nav("/"); }}>停止</button>
+          <button type="button" className="playbtn" aria-label={playLabel} onClick={() => void toggle()}>
+            <PlayGlyph playing={playing} />
           </button>
           {hasCategory && (
-            <button type="button" className="ghost" disabled={snap.status !== "playing"} onClick={() => void engine.skip()}>
+            <button type="button" className="btn btn-ghost" disabled={snap.status !== "playing"} onClick={() => void engine.skip()}>
               下一首
             </button>
           )}
-          <button type="button" className="ghost info" title="关于" aria-label="关于" onClick={() => setAbout(true)}>
+          <button type="button" className="btn btn-ghost" onClick={() => setAdvanced((v) => !v)}>
+            {advanced ? "收起" : "展开"}
+          </button>
+          <button type="button" className="btn btn-ghost info" title="关于" aria-label="关于" onClick={() => setAbout(true)}>
             i
           </button>
         </div>
@@ -498,6 +557,7 @@ export function PlayPage() {
             onChange={(e) => {
               const v = Number(e.target.value);
               engine.setMaster(v);
+              if (v > 0) lastMaster.current = v;
               if (mix) mix.master_volume = v;
             }}
           />
@@ -506,8 +566,23 @@ export function PlayPage() {
       </div>
       </div>
       {about && <AboutModal tone="play" onClose={() => setAbout(false)} />}
-      <style>{playCss}</style>
     </div>
+  );
+}
+
+function PlayGlyph({ playing }: { playing: boolean }) {
+  if (playing) {
+    return (
+      <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden>
+        <rect x="6" y="5" width="4" height="14" rx="0.5" fill="currentColor" />
+        <rect x="14" y="5" width="4" height="14" rx="0.5" fill="currentColor" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden>
+      <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
+    </svg>
   );
 }
 
@@ -550,169 +625,3 @@ function rowFromTrack(
   };
 }
 
-const playCss = `
-.play { position: fixed; inset: 0; overflow: hidden; color: #f4efe6; isolation: isolate; }
-.stage {
-  position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  isolation: isolate;
-}
-.hud {
-  position: absolute; inset: 0; z-index: 40; pointer-events: none;
-}
-.hud header, .hud .now, .hud .dock { pointer-events: auto; }
-.scene {
-  position: absolute; inset: -3.2%;
-  transform-origin: 50% 42%;
-  animation: ken 76s ease-in-out infinite alternate;
-}
-.play.reduce-motion .scene { animation: none; inset: 0; }
-.bg {
-  position: absolute; inset: 0;
-  background: #0a0a0c center / cover no-repeat;
-  transform: translate3d(var(--sx, 0px), var(--sy, 0px), 0) rotate(var(--sr, 0deg));
-  will-change: transform;
-  filter: saturate(.92) contrast(1.04);
-}
-.bg.grain::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .08;
-  background-image: repeating-radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 1px 3px);
-  mix-blend-mode: overlay; animation: grain 0.4s steps(2) infinite;
-}
-@keyframes ken { from { transform: scale(1.012); } to { transform: scale(1.042) translate3d(-0.4%, -.25%, 0); } }
-@keyframes grain { from { transform: translate(0,0); } to { transform: translate(-2%, 1%); } }
-.fx-glass-slot, .fx-glass, .fx-overlay, .fx {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  pointer-events: none;
-}
-.fx-glass-slot, .fx-glass { z-index: 0; }
-.fx-overlay { z-index: 1; opacity: 0; transition: opacity .45s ease; }
-.fx-glass { opacity: 0; transition: opacity .4s ease; }
-.fx { z-index: 2; }
-.vignette {
-  position: absolute; inset: 0; pointer-events: none; z-index: 3;
-  background:
-    radial-gradient(ellipse at 50% 40%, transparent 42%, rgba(0,0,0,.4) 100%),
-    linear-gradient(180deg, rgba(0,0,0,.22) 0%, transparent 24%, transparent 62%, rgba(0,0,0,.62) 100%);
-}
-.bloom {
-  position: absolute; inset: 0; pointer-events: none; z-index: 3; mix-blend-mode: screen;
-  background: radial-gradient(ellipse at var(--lx,50%) var(--ly,70%), var(--lc, rgba(255,180,80,.35)), transparent 55%);
-  animation: breathe 6.4s ease-in-out infinite;
-}
-@keyframes breathe { 0%,100% { opacity: .14 } 50% { opacity: .3 } }
-header {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 31;
-  display: flex; align-items: center; gap: 12px;
-  padding: 18px 20px; background: linear-gradient(180deg, rgba(0,0,0,.45), transparent);
-}
-header b { letter-spacing: .12em; font-weight: 500; }
-header span { color: rgba(244,239,230,.5); font-size: 12px; margin-left: auto; }
-.now {
-  position: absolute; top: 64px; right: 22px; z-index: 50;
-  width: min(300px, 42vw);
-  transform: translateZ(0);
-}
-.now div { margin-bottom: 12px; }
-.now em {
-  display: block; font-style: normal; font-size: 11px;
-  color: rgba(244,239,230,.82); margin-bottom: 3px;
-  text-shadow: 0 1px 10px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.9);
-}
-.now i { display: block; height: 2px; width: 100%; background: #fff; transform-origin: left; opacity: .85; }
-.tvol { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.tvol input { flex: 1; }
-.tvol b, .vol b { font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 500; min-width: 2.8em; text-align: right; }
-.dock {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 31;
-  padding: 18px 24px 28px;
-  display: grid; justify-items: center; gap: 10px;
-  background: linear-gradient(0deg, rgba(0,0,0,.55), transparent);
-}
-.clock { letter-spacing: .16em; font-size: 13px; }
-.clock span { margin-left: 10px; color: rgba(244,239,230,.45); letter-spacing: .08em; font-size: 11px; }
-.controls { display: flex; gap: 10px; align-items: center; }
-.playbtn { min-width: 96px; padding: 10px 22px; font-size: 15px; background: rgba(255,255,255,.14); }
-.ghost { background: transparent; }
-.info {
-  width: 34px; height: 34px; padding: 0;
-  font-style: italic; font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px; font-weight: 600; letter-spacing: 0;
-}
-.vol { display: flex; gap: 10px; align-items: center; font-size: 12px; color: rgba(244,239,230,.55); width: min(360px, 70vw); }
-.vol input { flex: 1; }
-.err { color: #ffb4a2; font-size: 12px; }
-.verse {
-  position: absolute;
-  z-index: 8;
-  margin: 0;
-  pointer-events: none;
-  color: rgba(252, 247, 236, 0.92);
-  text-shadow: 0 1px 18px rgba(0,0,0,.55), 0 0 2px rgba(0,0,0,.8);
-  font-family: "Songti TC", "Kaiti TC", "STKaiti", "Songti SC", "Kaiti SC", "Source Han Serif TC", "Noto Serif TC", serif;
-  transition: opacity 0.9s ease;
-  max-height: 52vh;
-  max-width: min(42vw, 420px);
-}
-.verse.leaving { opacity: 0; }
-.verse .el {
-  display: block;
-  opacity: 0;
-  animation: verseIn 1.15s ease forwards;
-  animation-delay: calc(var(--i) * 0.78s);
-}
-.verse.leaving .el { animation: none; opacity: 1; }
-.verse.vert {
-  writing-mode: vertical-rl;
-  letter-spacing: 0.22em;
-}
-.verse.vert .title {
-  font-size: 13px;
-  letter-spacing: 0.32em;
-  color: rgba(252,247,236,.62);
-  padding-left: 0.55em;
-}
-.verse.vert .line {
-  font-size: clamp(20px, 2.4vw, 30px);
-  font-weight: 500;
-  line-height: 1.55;
-}
-.verse.vert .by {
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  color: rgba(252,247,236,.5);
-  padding-right: 0.4em;
-}
-.verse.horiz {
-  writing-mode: horizontal-tb;
-  max-width: min(28vw, 280px);
-}
-.verse.horiz .title {
-  font-size: 12px;
-  letter-spacing: 0.28em;
-  color: rgba(252,247,236,.58);
-  margin-bottom: 10px;
-}
-.verse.horiz .line {
-  font-size: clamp(18px, 2vw, 26px);
-  line-height: 1.7;
-  letter-spacing: 0.12em;
-}
-.verse.horiz .by {
-  margin-top: 12px;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  color: rgba(252,247,236,.48);
-}
-@keyframes verseIn {
-  from { opacity: 0; filter: blur(6px); transform: translateY(8px); }
-  to { opacity: 1; filter: blur(0); transform: none; }
-}
-.verse.vert .el { transform: none; }
-.verse.vert .el {
-  animation-name: verseInVert;
-}
-@keyframes verseInVert {
-  from { opacity: 0; filter: blur(6px); }
-  to { opacity: 1; filter: blur(0); }
-}
-`;

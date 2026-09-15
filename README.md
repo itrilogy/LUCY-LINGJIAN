@@ -1,7 +1,7 @@
 <div align="center">
   <img src="public/brand/lingjian-mark.svg" width="64" height="64" alt="聆涧 · LingJian 产品标" />
   &nbsp;&nbsp;
-  <img src="public/brand/luxi-lab-main.svg" width="64" height="64" alt="鹿溪联合创新实验室 LUXI LAB" />
+  <img src="public/brand/luxi-lab.svg" width="64" height="64" alt="鹿溪联合创新实验室 LUXI LAB" />
 </div>
 
 <h1 align="center">聆涧 · LingJian（VoiceStream）</h1>
@@ -42,9 +42,9 @@ npm run dev
 
 | 标识 | 预览 | 说明 | 源文件 |
 | :---: | :---: | :--- | :--- |
-| **产品方标** | <img src="public/brand/lingjian-mark.svg" width="32" height="32" alt="聆涧" /> | 山涧溪流 + 声波意象（鹿溪绿底） | `public/brand/lingjian-mark.svg` |
+| **产品方标** | <img src="public/brand/lingjian-mark.svg" width="32" height="32" alt="聆涧" /> | 深林砖 + 暖米山脊 + 一字清溪（套件定稿） | `public/brand/lingjian-mark.svg` |
 | **产品字锁** | [`public/brand/logo.svg`](public/brand/logo.svg) | 横版产品字锁 | `public/brand/logo.svg` |
-| **实验室主标** | <img src="public/brand/luxi-lab-main.svg" width="32" height="32" alt="LUXI LAB" /> | 官方 LUXI LAB | `public/brand/luxi-lab-main.svg` |
+| **实验室符号标** | <img src="public/brand/luxi-lab.svg" width="32" height="32" alt="LUXI LAB" /> | 界面 LOGO（Y + 一横，无方框） | `public/brand/luxi-lab.svg` |
 
 **色板（LUXI CI）**
 
@@ -54,6 +54,10 @@ npm run dev
 | 源启白 | `#F5F7FA` | 浅色背景 / 反白 |
 | 进化蓝 | `#00D2FF` | 溪流 / 数据高亮 |
 | 标题金 | `#F1C40F` | 落点 / 显著信号 |
+
+产品 accent：聆涧暖米 `#E8D4B0`（强调 / 标签；Primary 按钮恒为鹿溪绿）。
+
+界面消费 [LUCY-DESIGN](https://github.com/itrilogy/LUCY-DESIGN) `tokens.css`：曲库 `data-theme="dark"` 工作台，播放页 `data-theme="ink"` 沉浸。实验室符号标与产品方标在 README / 关于 / LegalGate **等大并排**；写实主标 `luxi-lab-main.svg` 仅归档，不进产品 UI。
 
 品牌上线副本：[`public/brand/`](./public/brand/README.md)。笔记库归档目录名为 `聆涧-LingJian-品牌资产`（Obsidian `departments/lab`，路径随库根而变）。
 
@@ -72,7 +76,7 @@ npm run dev
 ---
 
 <div align="center">
-  <img src="public/brand/luxi-lab-main.svg" width="48" height="48" alt="LUXI LAB" />
+  <img src="public/brand/luxi-lab.svg" width="48" height="48" alt="LUXI LAB" />
   <p><strong>聆涧 · LingJian</strong> · 耳畔清涧，一字生境</p>
   <p>© 鹿溪联合创新实验室 · LUXI Joint Innovation Lab</p>
   <p><em>林深见鹿，源启清溪 · Deep Insights, Evolutionary Origin.</em></p>

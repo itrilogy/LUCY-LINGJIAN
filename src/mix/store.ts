@@ -6,13 +6,17 @@ import type { BgCatalog } from "../backgrounds/match";
 
 type Draft = Mix;
 
+type CatalogStatus = "loading" | "ready" | "error";
+
 type Store = {
   catalog: Catalog | null;
+  catalogStatus: CatalogStatus;
   backgrounds: BgCatalog | null;
   mixes: Array<{ id: string; name: string; updated_at: string; track_count: number }>;
   draft: Draft;
   legalOk: boolean;
   setCatalog: (c: Catalog) => void;
+  failCatalog: () => void;
   setBackgrounds: (b: BgCatalog) => void;
   setMixes: (m: Store["mixes"]) => void;
   acceptLegal: () => void;
@@ -44,11 +48,13 @@ function emptyDraft(): Draft {
 
 export const useStore = create<Store>((set) => ({
   catalog: null,
+  catalogStatus: "loading",
   backgrounds: null,
   mixes: [],
   draft: emptyDraft(),
   legalOk: typeof localStorage !== "undefined" && localStorage.getItem("voicestream_legal_ok") === "1",
-  setCatalog: (catalog) => set({ catalog }),
+  setCatalog: (catalog) => set({ catalog, catalogStatus: "ready" }),
+  failCatalog: () => set({ catalogStatus: "error" }),
   setBackgrounds: (backgrounds) => set({ backgrounds }),
   setMixes: (mixes) => set({ mixes }),
   acceptLegal: () => {

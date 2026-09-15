@@ -68,7 +68,10 @@ export function deleteMix(root: string, id: string): boolean {
   try {
     const dir = mixDir(root, id);
     if (!existsSync(dir)) return false;
-    rmSync(dir, { recursive: true, force: true });
+    const base = path.resolve(root, "data/mixes");
+    const bak = path.join(base, `.${id}.bak`);
+    if (existsSync(bak)) rmSync(bak, { recursive: true, force: true });
+    renameSync(dir, bak);
     return true;
   } catch {
     return false;
